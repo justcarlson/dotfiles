@@ -10,6 +10,7 @@ These are offered during `./install.sh`:
 |---------|---------|------------------|
 | visual-studio-code-bin | Code editor | `EDITOR=code` in uwsm/default |
 | google-chrome-beta | Web browser | `BROWSER` in uwsm/default |
+| tailscale | Mesh VPN | Remote access |
 | solaar | Logitech device manager | For MX mice/keyboards |
 
 ## Pre-installed on Omarchy

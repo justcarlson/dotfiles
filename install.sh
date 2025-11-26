@@ -32,6 +32,7 @@ echo ""
 OPTIONAL_PACKAGES=(
     "visual-studio-code-bin|Editor|Default editor (EDITOR=code)"
     "google-chrome-beta|Browser|Default browser (BROWSER)"
+    "tailscale|Networking|Mesh VPN"
     "solaar|Utilities|Logitech device manager"
 )
 

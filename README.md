@@ -35,7 +35,7 @@ This repo requires SSH authentication. Configure 1Password SSH agent first:
    - Back up existing configs to `~/omarchy-backup-TIMESTAMP/`
    - Install GNU Stow if needed
    - Create symlinks to your dotfiles
-   - Offer to install 3 additional apps (VSCode, Chrome Beta, Solaar)
+   - Offer to install 4 additional apps (VSCode, Chrome Beta, Tailscale, Solaar)
 
    **Important:** Do NOT use `sudo` - the script doesn't need it.
 
