@@ -13,3 +13,22 @@ export PATH="$HOME/.local/bin:$PATH"
 
 # 1Password SSH agent
 export SSH_AUTH_SOCK=~/.1password/agent.sock
+
+# Claude Code CLI aliases
+alias c-dsp='claude --dangerously-skip-permissions'
+alias c-continue='claude --continue'
+alias c-c='claude --continue'
+alias c-print='claude --print'
+alias c-p='claude --print'
+alias c-verbose='claude --verbose'
+alias c-v='claude --verbose'
+
+# Claude model aliases
+alias c-opus='claude --model opus'
+alias c-sonnet='claude --model sonnet'
+alias c-haiku='claude --model haiku'
+
+# Claude combo aliases
+alias c-yolo='claude --dangerously-skip-permissions --model opus'
+alias c-resume='claude --resume'
+alias c-r='claude --resume'
