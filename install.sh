@@ -69,7 +69,7 @@ install_packages() {
 
     echo ""
     for pkg in "${packages[@]}"; do
-        ((current++))
+        ((++current))
         printf "[%d/%d] Installing %s... " "$current" "$total" "$pkg"
         if yay -S --noconfirm "$pkg" &>/dev/null; then
             echo "✅"
