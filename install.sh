@@ -34,7 +34,6 @@ OPTIONAL_PACKAGES=(
     "google-chrome-beta|Browser|Default browser (BROWSER)"
     "tailscale|Networking|Mesh VPN"
     "solaar|Utilities|Logitech device manager"
-    "python-pipx|Python|Isolated Python app installer"
 )
 
 # Display available packages
@@ -223,12 +222,14 @@ if stow omarchy-config; then
     echo ""
 
     # Auto-install pipx if not available
-    if ! command -v pipx &> /dev/null; then
+    if ! command -v pipx >/dev/null 2>&1; then
         echo "📦 pipx not found. Installing..."
         if yay -S --noconfirm python-pipx &>/dev/null; then
             echo "✅ pipx installed successfully"
             # Ensure pipx path is available in current session
             export PATH="$HOME/.local/bin:$PATH"
+            # Persist PATH in shell configs
+            pipx ensurepath --force >/dev/null 2>&1
         else
             echo "❌ Failed to install pipx"
             echo "   Install manually with: yay -S python-pipx"
@@ -236,11 +237,11 @@ if stow omarchy-config; then
         fi
     fi
 
-    if command -v pipx &> /dev/null; then
-        read -p "Install PyGPT AI assistant? [y/N]: " -n 1 -r pygpt_choice
+    if command -v pipx >/dev/null 2>&1; then
+        read -p "Install PyGPT AI assistant? [Y/n]: " -n 1 -r pygpt_choice
         echo ""
 
-        if [[ "${pygpt_choice,,}" == "y" ]]; then
+        if [[ ! "${pygpt_choice,,}" == "n" ]]; then
             echo "Installing PyGPT via pipx..."
             if pipx install pygpt-net; then
                 echo "✅ PyGPT installed successfully"
@@ -251,7 +252,10 @@ if stow omarchy-config; then
                 echo "   Try manually: pipx install pygpt-net"
             fi
         else
-            echo "Skipping PyGPT. Install later with: pipx install pygpt-net"
+            echo "Skipping PyGPT."
+            echo "⚠️  Note: PyGPT is configured to autostart in hypr/autostart.conf"
+            echo "   Remove or comment out the 'exec-once = uwsm-app -- pygpt' line if not installing."
+            echo "   Install later with: pipx install pygpt-net"
         fi
     fi
     echo ""
