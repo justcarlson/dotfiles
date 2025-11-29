@@ -222,14 +222,14 @@ if stow omarchy-config; then
     echo ""
 
     # Auto-install pipx if not available
-    if ! command -v pipx >/dev/null 2>&1; then
+    if ! command -v pipx &>/dev/null; then
         echo "📦 pipx not found. Installing..."
         if yay -S --noconfirm python-pipx &>/dev/null; then
             echo "✅ pipx installed successfully"
             # Ensure pipx path is available in current session
             export PATH="$HOME/.local/bin:$PATH"
             # Persist PATH in shell configs
-            pipx ensurepath --force >/dev/null 2>&1
+            pipx ensurepath --force &>/dev/null
         else
             echo "❌ Failed to install pipx"
             echo "   Install manually with: yay -S python-pipx"
@@ -237,7 +237,7 @@ if stow omarchy-config; then
         fi
     fi
 
-    if command -v pipx >/dev/null 2>&1; then
+    if command -v pipx &>/dev/null; then
         read -p "Install PyGPT AI assistant? [Y/n]: " -n 1 -r pygpt_choice
         echo ""
 
