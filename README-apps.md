@@ -30,6 +30,14 @@ These are included in Omarchy's base packages and referenced in bindings.conf:
 | 1password-beta | Password manager | Super+Shift+/ |
 | nautilus | File manager | Super+Shift+F |
 
+## Installed via pipx
+
+These are offered during `./install.sh` after the yay packages. `python-pipx` is auto-installed if needed:
+
+| Package | Purpose | Install Command | Keybinding |
+|---------|---------|-----------------|------------|
+| pygpt-net | PyGPT AI assistant | `pipx install pygpt-net` | Super+Shift+I |
+
 ## Manual Installation
 
 To install any package individually:
