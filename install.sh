@@ -38,6 +38,7 @@ OPTIONAL_PACKAGES=(
     "bun-bin|Development|JavaScript runtime"
     "claude-code|Development|Claude Code CLI"
     "wev|Utilities|Wayland event viewer"
+    "wget|Utilities|Network file downloader"
 )
 
 # Track skipped apps for autostart cleanup
