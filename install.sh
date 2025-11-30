@@ -50,6 +50,11 @@ declare -A AUTOSTART_MAP=(
     ["pygpt-net"]="exec-once = uwsm-app -- pygpt"
 )
 
+# Map package names to post-install commands
+declare -A POST_INSTALL_MAP=(
+    ["claude-code"]="mkdir -p ~/.local/bin && ln -sf /usr/bin/claude ~/.local/bin/claude"
+)
+
 # Display available packages
 display_packages() {
     local i=1
@@ -73,6 +78,10 @@ install_packages() {
         printf "[%d/%d] Installing %s... " "$current" "$total" "$pkg"
         if yay -S --noconfirm "$pkg" &>/dev/null; then
             echo "✅"
+            # Run post-install command if defined
+            if [ -n "${POST_INSTALL_MAP[$pkg]}" ]; then
+                eval "${POST_INSTALL_MAP[$pkg]}" 2>/dev/null
+            fi
         else
             echo "❌"
             failed+=("$pkg")
