@@ -8,8 +8,6 @@ These are offered during `./install.sh`:
 
 | Package | Purpose | Config Reference |
 |---------|---------|------------------|
-| cursor-bin | Code editor | `EDITOR=cursor` in uwsm/default |
-| cursor-cli | Cursor CLI tools | CLI |
 | google-chrome-beta | Web browser | `BROWSER` in uwsm/default |
 | tailscale | Mesh VPN | Remote access |
 | solaar | Logitech device manager | For MX mice/keyboards |
@@ -51,9 +49,42 @@ These are offered during `./install.sh` after the yay packages. `python-pipx` is
 |---------|---------|-----------------|------------|
 | pygpt-net | PyGPT AI assistant | `pipx install pygpt-net` | Super+Shift+I |
 
-## Manual Installation
+## Manual Installation (AppImage)
 
-To install any package individually:
+Cursor is installed manually via AppImage (not from AUR):
+
+```bash
+# Download from https://www.cursor.com/downloads
+# Then install:
+chmod +x ~/Downloads/Cursor-*.AppImage
+sudo mv ~/Downloads/Cursor-*.AppImage /opt/cursor.AppImage
+sudo ln -s /opt/cursor.AppImage /usr/local/bin/cursor
+
+# Extract and install icon + desktop entry:
+cd /tmp && /opt/cursor.AppImage --appimage-extract
+sudo cp squashfs-root/usr/share/icons/hicolor/256x256/apps/cursor.png /usr/share/icons/hicolor/256x256/apps/
+sudo cp squashfs-root/usr/share/icons/hicolor/128x128/apps/cursor.png /usr/share/icons/hicolor/128x128/apps/
+sudo cp squashfs-root/usr/share/icons/hicolor/512x512/apps/cursor.png /usr/share/icons/hicolor/512x512/apps/
+rm -rf squashfs-root
+
+# Create desktop entry:
+cat << 'EOF' | sudo tee /usr/share/applications/cursor.desktop
+[Desktop Entry]
+Name=Cursor
+Comment=AI-powered code editor
+Exec=/opt/cursor.AppImage --no-sandbox %F
+Icon=cursor
+Type=Application
+Categories=Development;IDE;TextEditor;
+MimeType=text/plain;inode/directory;
+StartupNotify=true
+StartupWMClass=Cursor
+EOF
+```
+
+## Manual Installation (yay)
+
+To install any other package individually:
 ```bash
 yay -S <package-name>
 ```
