@@ -16,24 +16,27 @@ export PATH="$HOME/.local/bin:$PATH"
 # 1Password SSH agent
 export SSH_AUTH_SOCK=~/.1password/agent.sock
 
-# Claude Code CLI aliases
-alias c-dsp='claude --dangerously-skip-permissions'
-alias c-continue='claude --continue'
-alias c-c='claude --continue'
-alias c-print='claude --print'
-alias c-p='claude --print'
-alias c-verbose='claude --verbose'
-alias c-v='claude --verbose'
+# Factory CLI aliases
+alias d-skip='droid exec --skip-permissions-unsafe'
+alias d-spec='droid --use-spec'
+alias d-s='droid --use-spec'
 
-# Claude model aliases
-alias c-opus='claude --model opus'
-alias c-sonnet='claude --model sonnet'
-alias c-haiku='claude --model haiku'
+# Droid model aliases
+alias d-opus='droid -m claude-opus-4-5-20251101'
+alias d-sonnet='droid -m claude-sonnet-4-5-20250929'
+alias d-haiku='droid -m claude-haiku-4-5-20251001'
 
-# Claude combo aliases
-alias c-yolo='claude --dangerously-skip-permissions --model opus'
-alias c-resume='claude --resume'
-alias c-r='claude --resume'
+# Droid combo aliases (base + model suffix: o=opus, s=sonnet, h=haiku)
+alias d-yolo='droid exec --skip-permissions-unsafe'
+alias d-yolo-o='droid exec --skip-permissions-unsafe -m claude-opus-4-5-20251101'
+alias d-yolo-s='droid exec --skip-permissions-unsafe -m claude-sonnet-4-5-20250929'
+alias d-yolo-h='droid exec --skip-permissions-unsafe -m claude-haiku-4-5-20251001'
+
+alias d-resume='droid --resume'
+alias d-r='droid --resume'
+alias d-r-o='droid --resume -m claude-opus-4-5-20251101'
+alias d-r-s='droid --resume -m claude-sonnet-4-5-20250929'
+alias d-r-h='droid --resume -m claude-haiku-4-5-20251001'
 
 # Created by `pipx` on 2025-11-29 19:23:05
 export PATH="$PATH:/home/justincarlson/.local/bin"

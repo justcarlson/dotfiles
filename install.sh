@@ -36,7 +36,6 @@ OPTIONAL_PACKAGES=(
     "solaar|Utilities|Logitech device manager"
     "tree|Utilities|Directory tree viewer"
     "bun-bin|Development|JavaScript runtime"
-    "claude-code|Development|Claude Code CLI"
     "wev|Utilities|Wayland event viewer"
     "wget|Utilities|Network file downloader"
 )
@@ -51,9 +50,7 @@ declare -A AUTOSTART_MAP=(
 )
 
 # Map package names to post-install commands
-declare -A POST_INSTALL_MAP=(
-    ["claude-code"]="mkdir -p ~/.local/bin && ln -sf /usr/bin/claude ~/.local/bin/claude"
-)
+declare -A POST_INSTALL_MAP=()
 
 # Display available packages
 display_packages() {
