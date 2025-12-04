@@ -344,6 +344,56 @@ if stow omarchy-config; then
         cleanup_autostart
     fi
 
+    # Configure MCP servers for AI tools
+    echo ""
+    echo "--------------------------------------"
+    echo "  Optional: Configure MCP Servers"
+    echo "--------------------------------------"
+    echo ""
+    echo "MCP servers provide AI tools with web search and documentation capabilities."
+    echo "These configs are stored locally (not in git) to protect your API keys."
+    echo ""
+
+    read -p "Configure MCP servers for Factory CLI and Cursor? [Y/n]: " -n 1 -r mcp_choice
+    echo ""
+
+    if [[ ! "${mcp_choice,,}" == "n" ]]; then
+        read -p "Exa API key (get one at https://exa.ai): " exa_key
+        read -p "Ref API key (get one at https://ref.tools): " ref_key
+
+        if [ -n "$exa_key" ] || [ -n "$ref_key" ]; then
+            # Build MCP config JSON
+            MCP_CONFIG='{"mcpServers":{'
+            first=true
+
+            if [ -n "$exa_key" ]; then
+                MCP_CONFIG+='"exa":{"type":"http","url":"https://mcp.exa.ai/mcp?exaApiKey='"$exa_key"'","headers":{}}'
+                first=false
+            fi
+
+            if [ -n "$ref_key" ]; then
+                [ "$first" = false ] && MCP_CONFIG+=','
+                MCP_CONFIG+='"Ref":{"type":"http","url":"https://api.ref.tools/mcp?apiKey='"$ref_key"'","headers":{}}'
+            fi
+
+            MCP_CONFIG+='}}'
+
+            # Create directories and write configs
+            mkdir -p "$HOME/.factory" "$HOME/.cursor"
+            echo "$MCP_CONFIG" > "$HOME/.factory/mcp.json"
+            echo "$MCP_CONFIG" > "$HOME/.cursor/mcp.json"
+            chmod 600 "$HOME/.factory/mcp.json" "$HOME/.cursor/mcp.json"
+
+            echo "✅ MCP configs created:"
+            echo "   ~/.factory/mcp.json"
+            echo "   ~/.cursor/mcp.json"
+        else
+            echo "No API keys provided. Skipping MCP configuration."
+        fi
+    else
+        echo "Skipping MCP configuration."
+    fi
+
     echo ""
 else
     echo ""
