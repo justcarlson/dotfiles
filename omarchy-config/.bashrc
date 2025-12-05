@@ -17,26 +17,16 @@ export PATH="$HOME/.local/bin:$PATH"
 export SSH_AUTH_SOCK=~/.1password/agent.sock
 
 # Factory CLI aliases
+# Exec mode (non-interactive) - supports -m for model selection
 alias d-skip='droid exec --skip-permissions-unsafe'
-alias d-spec='droid --use-spec'
-alias d-s='droid --use-spec'
-
-# Droid model aliases
-alias d-opus='droid -m claude-opus-4-5-20251101'
-alias d-sonnet='droid -m claude-sonnet-4-5-20250929'
-alias d-haiku='droid -m claude-haiku-4-5-20251001'
-
-# Droid combo aliases (base + model suffix: o=opus, s=sonnet, h=haiku)
 alias d-yolo='droid exec --skip-permissions-unsafe'
 alias d-yolo-o='droid exec --skip-permissions-unsafe -m claude-opus-4-5-20251101'
 alias d-yolo-s='droid exec --skip-permissions-unsafe -m claude-sonnet-4-5-20250929'
 alias d-yolo-h='droid exec --skip-permissions-unsafe -m claude-haiku-4-5-20251001'
 
+# Interactive mode - only supports --resume
 alias d-resume='droid --resume'
 alias d-r='droid --resume'
-alias d-r-o='droid --resume -m claude-opus-4-5-20251101'
-alias d-r-s='droid --resume -m claude-sonnet-4-5-20250929'
-alias d-r-h='droid --resume -m claude-haiku-4-5-20251001'
 
 # Created by `pipx` on 2025-11-29 19:23:05
 export PATH="$PATH:/home/justincarlson/.local/bin"

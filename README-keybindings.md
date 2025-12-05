@@ -26,7 +26,7 @@
 | Keybinding | Action |
 |------------|--------|
 | `Super + Shift + A` | Claude (web) |
-| `Super + Shift + Alt + A` | Factory CLI (droid with spec mode + Opus) |
+| `Super + Shift + Alt + A` | Factory CLI (droid) |
 
 ### Web Apps
 
@@ -60,37 +60,19 @@
 
 ### Factory CLI (droid)
 
-#### Basic
+#### Exec Mode (non-interactive, supports model selection)
 
 | Alias | Command | Description |
 |-------|---------|-------------|
-| `d-spec` | `droid --use-spec` | Start in spec mode |
-| `d-s` | `droid --use-spec` | Start in spec mode (short) |
 | `d-skip` | `droid exec --skip-permissions-unsafe` | Exec without permission prompts |
+| `d-yolo` | `droid exec --skip-permissions-unsafe` | Exec without permission prompts |
+| `d-yolo-o` | `droid exec --skip-permissions-unsafe -m claude-opus-4-5-20251101` | + Opus model |
+| `d-yolo-s` | `droid exec --skip-permissions-unsafe -m claude-sonnet-4-5-20250929` | + Sonnet model |
+| `d-yolo-h` | `droid exec --skip-permissions-unsafe -m claude-haiku-4-5-20251001` | + Haiku model |
+
+#### Interactive Mode
+
+| Alias | Command | Description |
+|-------|---------|-------------|
 | `d-resume` | `droid --resume` | Resume last session |
 | `d-r` | `droid --resume` | Resume last session (short) |
-
-#### Model Selection
-
-| Alias | Command | Model |
-|-------|---------|-------|
-| `d-opus` | `droid -m claude-opus-4-5-20251101` | Claude Opus 4.5 |
-| `d-sonnet` | `droid -m claude-sonnet-4-5-20250929` | Claude Sonnet 4.5 |
-| `d-haiku` | `droid -m claude-haiku-4-5-20251001` | Claude Haiku 4.5 |
-
-#### Combo: Skip Permissions + Model
-
-| Alias | Command |
-|-------|---------|
-| `d-yolo` | `droid exec --skip-permissions-unsafe` |
-| `d-yolo-o` | `droid exec --skip-permissions-unsafe -m claude-opus-4-5-20251101` |
-| `d-yolo-s` | `droid exec --skip-permissions-unsafe -m claude-sonnet-4-5-20250929` |
-| `d-yolo-h` | `droid exec --skip-permissions-unsafe -m claude-haiku-4-5-20251001` |
-
-#### Combo: Resume + Model
-
-| Alias | Command |
-|-------|---------|
-| `d-r-o` | `droid --resume -m claude-opus-4-5-20251101` |
-| `d-r-s` | `droid --resume -m claude-sonnet-4-5-20250929` |
-| `d-r-h` | `droid --resume -m claude-haiku-4-5-20251001` |
