@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Check if BROWSER environment variable is set and different from xdg-settings
+if [ -n "$BROWSER" ]; then
+    # Check if the BROWSER variable corresponds to a desktop file
+    browser_desktop="${BROWSER}.desktop"
+    if [ -f "/usr/share/applications/${browser_desktop}" ] || [ -f "$HOME/.local/share/applications/${browser_desktop}" ]; then
+        default_browser="$browser_desktop"
+    fi
+fi
+
+# Fallback to xdg-settings if BROWSER is not set or doesn't have a desktop file
+if [ -z "$default_browser" ]; then
+    default_browser=$(xdg-settings get default-web-browser)
+fi
+
+browser_exec=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$default_browser 2>/dev/null | head -1)
+
+if [[ $browser_exec =~ (firefox|zen|librewolf) ]]; then
+  private_flag="--private-window"
+else
+  private_flag="--incognito"
+fi
+
+exec setsid uwsm-app -- "$browser_exec" "${@/--private/$private_flag}"
