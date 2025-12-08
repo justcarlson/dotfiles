@@ -154,6 +154,7 @@ CONFIGS=(
     ".config/starship.toml"
     ".bashrc"
     ".XCompose"
+    ".local/share/warp-terminal"
 )
 
 # Check if any configs exist and need backing up
@@ -205,6 +206,7 @@ if stow omarchy-config; then
     echo "  • Waybar (top bar)"
     echo "  • Walker (launcher)"
     echo "  • Ghostty (terminal)"
+    echo "  • Warp terminal themes (Catppuccin Mocha)"
     echo "  • uwsm (session manager)"
     echo "  • Starship (shell prompt)"
     echo "  • .bashrc and .XCompose"
