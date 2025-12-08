@@ -68,11 +68,20 @@ install_packages() {
     local total=${#packages[@]}
     local current=0
     local -a failed=()
+    local -a skipped=()
 
     echo ""
     for pkg in "${packages[@]}"; do
         ((++current))
         printf "[%d/%d] Installing %s... " "$current" "$total" "$pkg"
+        
+        # Check if package is already installed
+        if pacman -Qi "$pkg" &>/dev/null; then
+            echo "✅ (already installed)"
+            skipped+=("$pkg")
+            continue
+        fi
+        
         if yay -S --noconfirm "$pkg" &>/dev/null; then
             echo "✅"
             # Run post-install command if defined
@@ -84,6 +93,14 @@ install_packages() {
             failed+=("$pkg")
         fi
     done
+
+    if [ ${#skipped[@]} -gt 0 ]; then
+        echo ""
+        echo "ℹ️  Some packages were already installed:"
+        for pkg in "${skipped[@]}"; do
+            echo "   $pkg"
+        done
+    fi
 
     if [ ${#failed[@]} -gt 0 ]; then
         echo ""
