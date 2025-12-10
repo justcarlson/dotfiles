@@ -83,6 +83,12 @@ stow --adopt omarchy-config
 - **Typora** - Markdown editor themes
 - **.bashrc and .XCompose** - Shell and input configs
 
+### Customization
+
+After installation, edit `~/.config/hypr/autostart.conf` to customize:
+- **Droid session directories** - Change `$HOME/dev`, `$HOME/.dotfiles`, etc. to your project paths
+- **Autostart apps** - Add/remove apps that launch on login
+
 ## Documentation
 
 - **[Package Reference](README-apps.md)** - List of optional and pre-installed packages

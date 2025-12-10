@@ -90,7 +90,10 @@ install_packages() {
             continue
         fi
         
-        if yay -S --noconfirm "$pkg" &>/dev/null; then
+        # Capture output to show on failure (aids debugging)
+        install_output=$(yay -S --noconfirm "$pkg" 2>&1)
+        install_status=$?
+        if [ $install_status -eq 0 ]; then
             echo "✅"
             # Run post-install command if defined
             if [ -n "${POST_INSTALL_MAP[$pkg]}" ]; then
@@ -98,6 +101,8 @@ install_packages() {
             fi
         else
             echo "❌"
+            echo "   Error output:"
+            echo "$install_output" | tail -5 | sed 's/^/   /'
             failed+=("$pkg")
         fi
     done
@@ -269,10 +274,15 @@ if stow omarchy-config; then
 
         if [ ${#missing_deps[@]} -gt 0 ]; then
             echo "   Installing: ${missing_deps[*]}"
-            if yay -S --noconfirm "${missing_deps[@]}" &>/dev/null; then
+            # Capture output to show on failure (aids debugging)
+            install_output=$(yay -S --noconfirm "${missing_deps[@]}" 2>&1)
+            install_status=$?
+            if [ $install_status -eq 0 ]; then
                 echo "✅ Build dependencies installed"
             else
                 echo "❌ Failed to install build dependencies"
+                echo "   Error output:"
+                echo "$install_output" | tail -5 | sed 's/^/   /'
                 echo "   Try manually: yay -S ${missing_deps[*]}"
             fi
         else
@@ -282,7 +292,11 @@ if stow omarchy-config; then
         echo ""
         echo "🔧 Setting up hyprpm (this may take a minute)..."
         
-        if hyprpm update 2>&1 | grep -v "^$"; then
+        # Capture output and check actual exit code (not grep's exit code)
+        hyprpm_output=$(hyprpm update 2>&1) || true
+        hyprpm_status=${PIPESTATUS[0]}
+        [ -n "$hyprpm_output" ] && echo "$hyprpm_output" | grep -v "^$"
+        if [ $hyprpm_status -eq 0 ]; then
             echo "✅ hyprpm headers updated"
         else
             echo "⚠️  hyprpm update had issues (may be OK if already configured)"
@@ -296,7 +310,10 @@ if stow omarchy-config; then
             echo "✅ Hy3 already installed"
         else
             # Add hy3 repo (auto-accept with yes)
-            if echo "y" | hyprpm add https://github.com/outfoxxed/hy3 2>&1 | grep -v "^$"; then
+            hyprpm_output=$(echo "y" | hyprpm add https://github.com/outfoxxed/hy3 2>&1) || true
+            hyprpm_status=$?
+            [ -n "$hyprpm_output" ] && echo "$hyprpm_output" | grep -v "^$"
+            if [ $hyprpm_status -eq 0 ]; then
                 echo "✅ Hy3 plugin added"
             else
                 echo "❌ Failed to add Hy3 plugin"
@@ -305,7 +322,10 @@ if stow omarchy-config; then
         fi
 
         # Enable hy3
-        if hyprpm enable hy3 2>&1 | grep -v "^$"; then
+        hyprpm_output=$(hyprpm enable hy3 2>&1) || true
+        hyprpm_status=$?
+        [ -n "$hyprpm_output" ] && echo "$hyprpm_output" | grep -v "^$"
+        if [ $hyprpm_status -eq 0 ]; then
             echo "✅ Hy3 enabled"
         else
             echo "⚠️  Hy3 enable had issues"
