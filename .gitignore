@@ -1,2 +1,3 @@
 # Large binaries - install these via package manager instead
 omarchy-config/.local/bin/droid
+omarchy-config/.local/bin/claude
