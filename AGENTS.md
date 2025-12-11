@@ -20,9 +20,6 @@ Personal dotfiles for Omarchy Linux (Arch + Hyprland). Uses GNU Stow for symlink
 stow omarchy-config           # Create symlinks
 stow -D omarchy-config        # Remove symlinks
 stow --adopt omarchy-config   # Adopt existing configs
-
-# Check for user packages not in base Omarchy
-./check-user-packages.sh
 ```
 
 ## Project Structure

@@ -13,9 +13,6 @@ stow omarchy-config           # Create symlinks
 stow -D omarchy-config        # Remove symlinks
 stow --adopt omarchy-config   # Adopt existing files into repo
 
-# Check user-installed packages vs Omarchy base
-./check-user-packages.sh
-
 # Reload Hyprland config after changes
 hyprctl reload
 ```

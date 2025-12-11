@@ -14,6 +14,8 @@ These are offered during `./install.sh`:
 | tree | Directory tree viewer | CLI |
 | bun-bin | JavaScript runtime | CLI |
 | wev | Wayland event viewer | Debugging keybindings |
+| wget | Network file downloader | CLI |
+| yazi | Terminal file manager | Super+Shift+F, default for directories |
 
 ## Pre-installed on Omarchy
 
@@ -30,7 +32,7 @@ These are included in Omarchy's base packages and referenced in bindings.conf:
 | ripgrep | Fast text search | CLI |
 | ghostty | Terminal | TERMINAL env |
 | 1password-beta | Password manager | Super+Shift+/ |
-| nautilus | File manager | Super+Shift+F |
+| nautilus | GUI file manager | CLI (`nautilus .`) |
 
 ## Installed via curl (automatic)
 
