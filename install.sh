@@ -185,6 +185,8 @@ CONFIGS=(
     ".config/ghostty"
     ".config/uwsm"
     ".config/starship.toml"
+    ".config/Typora/themes/ia_typora.css"
+    ".config/Typora/themes/ia_typora_night.css"
     ".bashrc"
     ".XCompose"
     ".local/share/warp-terminal"
