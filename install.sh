@@ -46,6 +46,7 @@ OPTIONAL_PACKAGES=(
     "bun-bin|Development|JavaScript runtime"
     "wev|Utilities|Wayland event viewer"
     "wget|Utilities|Network file downloader"
+    "yazi|File Manager|Terminal file manager with vim-style navigation"
 )
 
 # Track skipped apps for autostart cleanup
@@ -58,7 +59,9 @@ declare -A AUTOSTART_MAP=(
 )
 
 # Map package names to post-install commands
-declare -A POST_INSTALL_MAP=()
+declare -A POST_INSTALL_MAP=(
+    ["yazi"]="xdg-mime default yazi.desktop inode/directory"
+)
 
 # Display available packages
 display_packages() {
@@ -185,6 +188,7 @@ CONFIGS=(
     ".bashrc"
     ".XCompose"
     ".local/share/warp-terminal"
+    ".local/share/applications/yazi.desktop"
 )
 
 # Check if any configs exist and need backing up
