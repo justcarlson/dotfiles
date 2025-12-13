@@ -21,7 +21,7 @@ This repo requires SSH authentication. Configure 1Password SSH agent first:
 
 1. **Clone this repository:**
    ```bash
-   git clone git@github.com:justcarlson/omarchy-dotfiles.git ~/dotfiles
+   git clone git@github.com:justcarlson/dotfiles.git ~/dotfiles
    ```
 
 2. **Run the installer:**
@@ -96,15 +96,34 @@ After installation, edit `~/.config/hypr/autostart.conf` to customize:
 
 ## Updating Configs
 
-### Save your local changes to the repo:
-```bash
-cd ~/dotfiles
-git add -A
-git commit -m "Update configs"
-git push
-```
-
 Since Stow creates symlinks, editing files in `~/.config/` automatically updates the files in `~/dotfiles/`.
+
+### Making Changes via PR Workflow
+
+1. Create a feature branch:
+   ```bash
+   cd ~/dotfiles
+   git checkout main
+   git pull
+   git checkout -b feature/description
+   ```
+
+2. Make your config changes (they're symlinked, so edit directly in `~/.config/`)
+
+3. Commit and push:
+   ```bash
+   git add -A
+   git commit -m "feat: description"
+   git push -u origin feature/description
+   gh pr create --fill
+   ```
+
+4. After PR merge, clean up:
+   ```bash
+   git checkout main
+   git pull
+   git branch -d feature/description
+   ```
 
 ### Pull latest configs from the repo:
 ```bash
@@ -113,6 +132,33 @@ git pull
 ```
 
 Changes are immediately active since the files are symlinked.
+
+## Version Tags & Rollback
+
+### Checking Out a Specific Version
+
+If you need to roll back to a previous stable release:
+```bash
+cd ~/dotfiles
+git checkout v1.0.0
+stow -R omarchy-config
+```
+
+This restores all configs to the state they were in at that version.
+
+### Returning to Latest
+
+To go back to the latest version:
+```bash
+cd ~/dotfiles
+git checkout main
+git pull
+stow -R omarchy-config
+```
+
+### Available Versions
+
+- **v1.0.0** - First stable release with Hyprland, Hy3, and core configs
 
 ## Uninstalling
 
