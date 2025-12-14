@@ -21,12 +21,12 @@ This repo requires SSH authentication. Configure 1Password SSH agent first:
 
 1. **Clone this repository:**
    ```bash
-   git clone git@github.com:justcarlson/dotfiles.git ~/dotfiles
+   git clone git@github.com:justcarlson/dotfiles.git ~/.dotfiles
    ```
 
 2. **Run the installer:**
    ```bash
-   cd ~/dotfiles
+   cd ~/.dotfiles
    chmod +x install.sh
    ./install.sh
    ```
@@ -72,7 +72,7 @@ mv ~/.XCompose ~/omarchy-backup-manual/
 
 **Option 2: Adopt existing configs** (merges your current configs into the repo)
 ```bash
-cd ~/dotfiles
+cd ~/.dotfiles
 stow --adopt omarchy-config
 ```
 
@@ -111,13 +111,13 @@ After installation, edit these files to customize:
 
 ## Updating Configs
 
-Since Stow creates symlinks, editing files in `~/.config/` automatically updates the files in `~/dotfiles/`.
+Since Stow creates symlinks, editing files in `~/.config/` automatically updates the files in `~/.dotfiles/`.
 
 ### Making Changes via PR Workflow
 
 1. Create a feature branch:
    ```bash
-   cd ~/dotfiles
+   cd ~/.dotfiles
    git checkout main
    git pull
    git checkout -b feature/description
@@ -142,7 +142,7 @@ Since Stow creates symlinks, editing files in `~/.config/` automatically updates
 
 ### Pull latest configs from the repo:
 ```bash
-cd ~/dotfiles
+cd ~/.dotfiles
 git pull
 ```
 
@@ -154,7 +154,7 @@ Changes are immediately active since the files are symlinked.
 
 If you need to roll back to a previous stable release:
 ```bash
-cd ~/dotfiles
+cd ~/.dotfiles
 git checkout v1.0.0
 stow -R omarchy-config
 ```
@@ -165,7 +165,7 @@ This restores all configs to the state they were in at that version.
 
 To go back to the latest version:
 ```bash
-cd ~/dotfiles
+cd ~/.dotfiles
 git checkout main
 git pull
 stow -R omarchy-config
@@ -179,7 +179,7 @@ stow -R omarchy-config
 
 To remove the symlinks and restore your configs to regular files:
 ```bash
-cd ~/dotfiles
+cd ~/.dotfiles
 stow -D omarchy-config
 ```
 
@@ -209,7 +209,7 @@ See "If You Get Conflicts" section above.
 The installer automatically rolls back if stow fails. Your original configs are preserved in `~/omarchy-backup-*/`. To manually restore:
 ```bash
 # Remove partial symlinks
-cd ~/dotfiles
+cd ~/.dotfiles
 stow -D omarchy-config
 
 # Restore from backup
