@@ -226,19 +226,51 @@ tui_secret() {
 # Single selection from list
 # Usage: choice=$(tui_choose "Option 1" "Option 2" "Option 3")
 tui_choose() {
+    # Debug: Log function entry and arguments
+    echo "[DEBUG tui_choose] Called with ${#@} arguments: $*" >&2
+    echo "[DEBUG tui_choose] TTY check: stdin=$([ -t 0 ] && echo 'yes' || echo 'no'), stdout=$([ -t 1 ] && echo 'yes' || echo 'no')" >&2
+    
     if _has_gum; then
-        gum choose "$@"
-    else
-        local i=1
-        for opt in "$@"; do
-            echo "  $i. $opt"
-            ((i++))
-        done
-        local num
-        read -p "Enter number: " num
-        if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le "$#" ]; then
-            echo "${!num}"
+        echo "[DEBUG tui_choose] gum detected, attempting gum choose..." >&2
+        echo "[DEBUG tui_choose] gum version: $(gum --version 2>&1)" >&2
+        
+        local result exit_code
+        result=$(gum choose "$@" 2>&1)
+        exit_code=$?
+        
+        echo "[DEBUG tui_choose] gum choose exit code: $exit_code" >&2
+        echo "[DEBUG tui_choose] gum choose result: '$result'" >&2
+        echo "[DEBUG tui_choose] result length: ${#result}" >&2
+        
+        # If gum returned a valid result, use it
+        if [[ $exit_code -eq 0 && -n "$result" ]]; then
+            echo "[DEBUG tui_choose] Using gum result" >&2
+            echo "$result"
+            return 0
         fi
+        
+        # Gum failed or returned empty - fall back to text prompt
+        echo "[DEBUG tui_choose] gum failed or empty, falling back to text prompt..." >&2
+    else
+        echo "[DEBUG tui_choose] gum not found, using text prompt" >&2
+    fi
+    
+    # Text-based fallback
+    echo "[DEBUG tui_choose] Displaying text menu..." >&2
+    local i=1
+    for opt in "$@"; do
+        echo "  $i. $opt" >&2
+        ((i++))
+    done
+    local num
+    read -p "Enter number: " num
+    echo "[DEBUG tui_choose] User entered: '$num'" >&2
+    if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le "$#" ]; then
+        local selected="${!num}"
+        echo "[DEBUG tui_choose] Returning text selection: '$selected'" >&2
+        echo "$selected"
+    else
+        echo "[DEBUG tui_choose] Invalid selection, returning empty" >&2
     fi
 }
 
