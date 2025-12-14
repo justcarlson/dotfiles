@@ -20,6 +20,28 @@ _has_gum() {
     command -v gum &>/dev/null
 }
 
+# =============================================================================
+# Tmpfile Cleanup
+# =============================================================================
+_TUI_TMPFILES=()
+
+_tui_cleanup_tmpfiles() {
+    for f in "${_TUI_TMPFILES[@]}"; do
+        rm -f "$f" 2>/dev/null
+    done
+}
+
+# Register cleanup on exit
+trap _tui_cleanup_tmpfiles EXIT
+
+# Helper to create tracked tmpfile
+_tui_mktemp() {
+    local tmpfile
+    tmpfile=$(mktemp)
+    _TUI_TMPFILES+=("$tmpfile")
+    echo "$tmpfile"
+}
+
 # Install gum if missing (called once at script start)
 tui_ensure_gum() {
     if _has_gum; then
@@ -167,18 +189,18 @@ tui_confirm() {
     
     if _has_gum; then
         if [[ "$default" == "true" ]]; then
-            gum confirm "$prompt" --default=true
+            gum confirm "$prompt" --default=true </dev/tty >/dev/tty 2>/dev/tty
         else
-            gum confirm "$prompt" --default=false
+            gum confirm "$prompt" --default=false </dev/tty >/dev/tty 2>/dev/tty
         fi
     else
         local yn
         if [[ "$default" == "true" ]]; then
-            read -p "$prompt [Y/n]: " -n 1 -r yn
+            read -p "$prompt [Y/n]: " -n 1 -r yn </dev/tty
         else
-            read -p "$prompt [y/N]: " -n 1 -r yn
+            read -p "$prompt [y/N]: " -n 1 -r yn </dev/tty
         fi
-        echo ""
+        echo "" >/dev/tty
         
         if [[ "$default" == "true" ]]; then
             [[ ! "${yn,,}" == "n" ]]
@@ -195,10 +217,14 @@ tui_input() {
     local placeholder="${2:-}"
     
     if _has_gum; then
-        gum input --prompt "$prompt: " --placeholder "$placeholder"
+        local tmpfile result
+        tmpfile=$(_tui_mktemp)
+        gum input --prompt "$prompt: " --placeholder "$placeholder" > "$tmpfile" </dev/tty 2>/dev/tty
+        result=$(cat "$tmpfile")
+        echo "$result"
     else
         local value
-        read -p "$prompt: " value
+        read -p "$prompt: " value </dev/tty
         echo "$value"
     fi
 }
@@ -210,11 +236,15 @@ tui_secret() {
     local placeholder="${2:-}"
     
     if _has_gum; then
-        gum input --password --prompt "$prompt: " --placeholder "$placeholder"
+        local tmpfile result
+        tmpfile=$(_tui_mktemp)
+        gum input --password --prompt "$prompt: " --placeholder "$placeholder" > "$tmpfile" </dev/tty 2>/dev/tty
+        result=$(cat "$tmpfile")
+        echo "$result"
     else
         local value
-        read -s -p "$prompt: " value
-        echo ""  # Newline after hidden input
+        read -s -p "$prompt: " value </dev/tty
+        echo "" >/dev/tty  # Newline after hidden input
         echo "$value"
     fi
 }
@@ -234,36 +264,38 @@ tui_choose() {
         echo "[DEBUG tui_choose] gum detected, attempting gum choose..." >&2
         echo "[DEBUG tui_choose] gum version: $(gum --version 2>&1)" >&2
         
-        local result exit_code
-        result=$(gum choose "$@" 2>&1)
+        local tmpfile result exit_code
+        tmpfile=$(_tui_mktemp)
+        
+        # Render to /dev/tty, capture result to tmpfile
+        gum choose "$@" > "$tmpfile" </dev/tty 2>/dev/tty
         exit_code=$?
+        result=$(cat "$tmpfile")
         
         echo "[DEBUG tui_choose] gum choose exit code: $exit_code" >&2
         echo "[DEBUG tui_choose] gum choose result: '$result'" >&2
         echo "[DEBUG tui_choose] result length: ${#result}" >&2
         
-        # If gum returned a valid result, use it
         if [[ $exit_code -eq 0 && -n "$result" ]]; then
             echo "[DEBUG tui_choose] Using gum result" >&2
             echo "$result"
             return 0
         fi
         
-        # Gum failed or returned empty - fall back to text prompt
         echo "[DEBUG tui_choose] gum failed or empty, falling back to text prompt..." >&2
     else
         echo "[DEBUG tui_choose] gum not found, using text prompt" >&2
     fi
     
-    # Text-based fallback
+    # Text-based fallback (render to /dev/tty, read from /dev/tty)
     echo "[DEBUG tui_choose] Displaying text menu..." >&2
     local i=1
     for opt in "$@"; do
-        echo "  $i. $opt" >&2
-        ((i++))
+        echo "  $i. $opt" >/dev/tty
+        i=$((i + 1))
     done
     local num
-    read -p "Enter number: " num
+    read -p "Enter number: " num </dev/tty
     echo "[DEBUG tui_choose] User entered: '$num'" >&2
     if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le "$#" ]; then
         local selected="${!num}"
@@ -282,18 +314,23 @@ tui_choose_multi() {
     shift
     
     if _has_gum; then
-        gum choose --no-limit --header "$header" "$@"
+        local tmpfile result
+        tmpfile=$(_tui_mktemp)
+        gum choose --no-limit --header "$header" "$@" > "$tmpfile" </dev/tty 2>/dev/tty
+        result=$(cat "$tmpfile")
+        echo "$result"
     else
-        echo "$header"
+        # Text fallback - render to /dev/tty
+        echo "$header" >/dev/tty
         local i=1
         for opt in "$@"; do
-            echo "  $i. $opt"
-            ((i++))
+            echo "  $i. $opt" >/dev/tty
+            i=$((i + 1))
         done
-        echo ""
-        echo "Enter numbers separated by spaces (or Enter for all):"
+        echo "" >/dev/tty
+        echo "Enter numbers separated by spaces (or Enter for all):" >/dev/tty
         local selection
-        read -r selection
+        read -r selection </dev/tty
         
         if [ -z "$selection" ]; then
             printf '%s\n' "$@"
@@ -314,7 +351,12 @@ tui_filter() {
     local placeholder="${1:-Search...}"
     
     if _has_gum; then
-        gum filter --placeholder "$placeholder"
+        local tmpfile result
+        tmpfile=$(_tui_mktemp)
+        # Pipe stdin to gum, render UI to /dev/tty, capture result
+        gum filter --placeholder "$placeholder" > "$tmpfile" </dev/tty 2>/dev/tty
+        result=$(cat "$tmpfile")
+        echo "$result"
     else
         # Fallback: just use choose
         local items=()
