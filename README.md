@@ -4,6 +4,7 @@
     <em>Modular dotfiles for Omarchy Linux + Hyprland</em>
   </p>
   <p align="center">
+    <a href="https://github.com/basecamp/omarchy"><img src="https://img.shields.io/badge/Omarchy-FF6B6B?style=flat&logo=linux&logoColor=white" alt="Omarchy"></a>
     <img src="https://img.shields.io/badge/Arch_Linux-1793D1?style=flat&logo=arch-linux&logoColor=white" alt="Arch Linux">
     <img src="https://img.shields.io/badge/Hyprland-58E1FF?style=flat&logo=hyprland&logoColor=black" alt="Hyprland">
     <img src="https://img.shields.io/badge/version-2.0.0-blue?style=flat" alt="Version">
@@ -166,5 +167,5 @@ stow -D omarchy-config   # Remove symlinks
 ---
 
 <p align="center">
-  <sub>Built for <a href="https://omarchy.com">Omarchy Linux</a></sub>
+  <sub>Built for <a href="https://omarchy.org">Omarchy Linux</a></sub>
 </p>
