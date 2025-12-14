@@ -18,6 +18,56 @@ source "$SCRIPT_DIR/lib/packages.sh"
 tui_setup_trap
 
 # =============================================================================
+# Command Line Arguments
+# =============================================================================
+DRY_RUN=false
+SKIP_PACKAGES=false
+SKIP_SECRETS=false
+
+usage() {
+    echo "Usage: $0 [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  --check       Dry run - show what would be done without making changes"
+    echo "  --skip-packages  Skip optional package installation"
+    echo "  --skip-secrets   Skip API key configuration"
+    echo "  -h, --help    Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0              # Full interactive install"
+    echo "  $0 --check      # Preview changes without applying"
+    echo "  $0 --skip-packages --skip-secrets  # Minimal install"
+}
+
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --check)
+                DRY_RUN=true
+                shift
+                ;;
+            --skip-packages)
+                SKIP_PACKAGES=true
+                shift
+                ;;
+            --skip-secrets)
+                SKIP_SECRETS=true
+                shift
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                tui_error "Unknown option: $1"
+                usage
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# =============================================================================
 # Configuration
 # =============================================================================
 
@@ -50,6 +100,11 @@ install_stow() {
         return 0
     fi
     
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would install GNU Stow"
+        return 0
+    fi
+    
     tui_info "Installing GNU Stow..."
     if command -v yay &>/dev/null; then
         if tui_spin "Installing stow..." yay -S --noconfirm stow; then
@@ -64,15 +119,25 @@ install_stow() {
 
 backup_existing_configs() {
     local needs_backup=false
+    local configs_to_backup=()
     
     for config in "${CONFIGS[@]}"; do
         if [[ -e "$HOME/$config" && ! -L "$HOME/$config" ]]; then
             needs_backup=true
-            break
+            configs_to_backup+=("$config")
         fi
     done
     
     if [[ "$needs_backup" == "false" ]]; then
+        tui_muted "No existing configs to backup"
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would backup ${#configs_to_backup[@]} configs:"
+        for config in "${configs_to_backup[@]}"; do
+            tui_muted "  $config"
+        done
         return 0
     fi
     
@@ -80,31 +145,98 @@ backup_existing_configs() {
     tui_info "Backing up existing configs to: $BACKUP_DIR"
     mkdir -p "$BACKUP_DIR"
     
-    for config in "${CONFIGS[@]}"; do
-        if [[ -e "$HOME/$config" && ! -L "$HOME/$config" ]]; then
-            local parent_dir
-            parent_dir=$(dirname "$config")
-            mkdir -p "$BACKUP_DIR/$parent_dir"
-            mv "$HOME/$config" "$BACKUP_DIR/$config"
-            tui_muted "Backed up: $config"
-        fi
+    for config in "${configs_to_backup[@]}"; do
+        local parent_dir
+        parent_dir=$(dirname "$config")
+        mkdir -p "$BACKUP_DIR/$parent_dir"
+        mv "$HOME/$config" "$BACKUP_DIR/$config"
+        tui_muted "Backed up: $config"
     done
     
     tui_success "Backup complete"
 }
 
 stow_configs() {
+    # Check if already stowed (idempotent)
+    local already_stowed=true
+    for config in "${CONFIGS[@]}"; do
+        if [[ ! -L "$HOME/$config" ]]; then
+            already_stowed=false
+            break
+        fi
+    done
+    
+    if [[ "$already_stowed" == "true" ]]; then
+        tui_success "Symlinks already in place"
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would create symlinks via stow"
+        # Show what would be linked
+        local would_link=0
+        for config in "${CONFIGS[@]}"; do
+            if [[ ! -L "$HOME/$config" ]]; then
+                tui_muted "  Would link: $config"
+                ((would_link++))
+            fi
+        done
+        tui_muted "  Total: $would_link symlinks"
+        return 0
+    fi
+    
     tui_info "Creating symlinks..."
     
-    if stow omarchy-config; then
+    # Capture stow output for better error reporting
+    local stow_output
+    if stow_output=$(stow omarchy-config 2>&1); then
         tui_success "Symlinks created"
         return 0
     else
         tui_error "Failed to create symlinks"
-        if [[ -n "$BACKUP_DIR" ]]; then
-            tui_muted "Your configs are backed up at: $BACKUP_DIR"
+        tui_muted "$stow_output"
+        
+        # Attempt rollback if we have a backup
+        if [[ -n "$BACKUP_DIR" && -d "$BACKUP_DIR" ]]; then
+            tui_warning "Attempting rollback..."
+            rollback_configs
         fi
         exit 1
+    fi
+}
+
+# Rollback configs from backup directory
+rollback_configs() {
+    if [[ -z "$BACKUP_DIR" || ! -d "$BACKUP_DIR" ]]; then
+        tui_error "No backup directory available for rollback"
+        return 1
+    fi
+    
+    # First, unstow any partial symlinks
+    stow -D omarchy-config 2>/dev/null || true
+    
+    # Restore backed up configs
+    local restored=0
+    for config in "${CONFIGS[@]}"; do
+        if [[ -e "$BACKUP_DIR/$config" ]]; then
+            local parent_dir
+            parent_dir=$(dirname "$HOME/$config")
+            mkdir -p "$parent_dir"
+            
+            # Remove any broken symlink
+            [[ -L "$HOME/$config" ]] && rm "$HOME/$config"
+            
+            mv "$BACKUP_DIR/$config" "$HOME/$config"
+            tui_muted "Restored: $config"
+            ((restored++))
+        fi
+    done
+    
+    if [[ $restored -gt 0 ]]; then
+        tui_success "Rollback complete: $restored configs restored"
+        tui_muted "Backup preserved at: $BACKUP_DIR"
+    else
+        tui_warning "No configs to restore"
     fi
 }
 
@@ -358,7 +490,13 @@ show_summary() {
 # =============================================================================
 
 main() {
-    tui_header "Omarchy Dotfiles"
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_header "Omarchy Dotfiles (DRY RUN)"
+        tui_warning "No changes will be made"
+        echo ""
+    else
+        tui_header "Omarchy Dotfiles"
+    fi
     
     # Ensure gum is available for best experience
     tui_ensure_gum
@@ -376,27 +514,54 @@ main() {
     
     # Step 3: Hy3 Plugin
     tui_step 3 6 "Hyprland plugins"
-    install_hy3
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would prompt for Hy3 installation"
+    else
+        install_hy3
+    fi
     echo ""
     
     # Step 4: Claude Code
     tui_step 4 6 "Development tools"
-    install_claude_code
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would prompt for Claude Code installation"
+    else
+        install_claude_code
+    fi
     echo ""
     
     # Step 5: Optional Packages
     tui_step 5 6 "Optional packages"
-    install_optional_packages
+    if [[ "$SKIP_PACKAGES" == "true" ]]; then
+        tui_muted "Skipped (--skip-packages)"
+    elif [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would prompt for optional packages"
+        pkg_display_available
+    else
+        install_optional_packages
+    fi
     echo ""
     
     # Step 6: Secrets & MCP
     tui_step 6 6 "API keys & secrets"
-    configure_secrets
+    if [[ "$SKIP_SECRETS" == "true" ]]; then
+        tui_muted "Skipped (--skip-secrets)"
+    elif [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would prompt for API key configuration"
+    else
+        configure_secrets
+    fi
     echo ""
     
     # Done!
-    show_summary
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_header "Dry Run Complete"
+        tui_info "Run without --check to apply changes"
+    else
+        show_summary
+    fi
 }
 
-# Run main
-main "$@"
+# Parse arguments and run
+parse_args "$@"
+main

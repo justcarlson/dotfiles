@@ -336,3 +336,26 @@ _tui_cleanup() {
     tui_warning "Installation cancelled."
     exit 130
 }
+
+# =============================================================================
+# Utility Functions
+# =============================================================================
+
+# Check if running in dry-run mode (set by install.sh)
+tui_is_dry_run() {
+    [[ "${DRY_RUN:-false}" == "true" ]]
+}
+
+# Execute command only if not in dry-run mode
+# Usage: tui_exec "description" command args...
+tui_exec() {
+    local description="$1"
+    shift
+    
+    if tui_is_dry_run; then
+        tui_info "[DRY RUN] Would: $description"
+        return 0
+    fi
+    
+    "$@"
+}
