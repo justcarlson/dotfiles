@@ -179,7 +179,7 @@ stow_configs() {
         for config in "${CONFIGS[@]}"; do
             if [[ ! -L "$HOME/$config" ]]; then
                 tui_muted "  Would link: $config"
-                ((would_link++))
+                would_link=$((would_link + 1))
             fi
         done
         tui_muted "  Total: $would_link symlinks"
@@ -229,7 +229,7 @@ rollback_configs() {
             
             mv "$BACKUP_DIR/$config" "$HOME/$config"
             tui_muted "Restored: $config"
-            ((restored++))
+            restored=$((restored + 1))
         fi
     done
     
@@ -373,7 +373,7 @@ install_optional_packages() {
         name=$(pkg_get_field "$entry" "name")
         if ! pkg_is_installed "$name"; then
             echo "[DEBUG install_optional_packages] Available: $name" >&2
-            ((available_count++))
+            available_count=$((available_count + 1))
         else
             echo "[DEBUG install_optional_packages] Already installed: $name" >&2
         fi
