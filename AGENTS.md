@@ -9,6 +9,7 @@ Personal dotfiles for Omarchy Linux (Arch + Hyprland). Uses GNU Stow for symlink
 - **Terminal:** Ghostty
 - **Shell:** Bash + Starship prompt
 - **Package Manager:** yay (AUR)
+- **TUI:** Gum for styled prompts
 
 ## Commands
 
@@ -25,11 +26,15 @@ stow --adopt omarchy-config   # Adopt existing configs
 ## Project Structure
 
 ```
-├── install.sh              → Main installer (runs Hy3 setup too)
+├── install.sh              → Main installer (orchestrator)
+├── lib/                    → Modular libraries
+│   ├── tui.sh              → Gum wrappers for styled UI
+│   ├── secrets.sh          → ~/.secrets management
+│   └── packages.sh         → Package registry & installer
 ├── omarchy-config/         → Stow package (mirrors ~/)
 │   ├── .config/hypr/       → Hyprland + Hy3 config
 │   ├── .config/ghostty/    → Terminal config
-│   ├── .local/bin/         → Scripts (droid-scripts/, cursor-wayland)
+│   ├── .local/bin/         → Scripts
 │   └── .bashrc             → Shell config
 ├── README-apps.md          → Package reference
 └── README-keybindings.md   → Keybindings reference
@@ -39,11 +44,23 @@ stow --adopt omarchy-config   # Adopt existing configs
 
 - ✅ **Always:** Place new configs in `omarchy-config/` mirroring `~/` structure
 - ✅ **Always:** Update `CONFIGS` array in `install.sh` when adding new config paths
-- ⚠️ **Ask first:** Adding new package dependencies to `OPTIONAL_PACKAGES`
+- ✅ **Always:** Add new packages to `PACKAGE_REGISTRY` in `lib/packages.sh`
+- ✅ **Always:** Store secrets in `~/.secrets`, never in tracked files
+- ⚠️ **Ask first:** Adding new package dependencies
 - 🚫 **Never:** Run `install.sh` with `sudo` - it doesn't need elevated privileges
 - 🚫 **Never:** Edit `~/.local/share/omarchy/` files - override in personal configs
+- 🚫 **Never:** Commit API keys or secrets to git
 
 ## Patterns
+
+**Adding a new package:**
+```bash
+# 1. Add to PACKAGE_REGISTRY in lib/packages.sh
+# Format: "name|category|description|config_files|autostart_entry|post_install"
+"newpkg|Category|Description|none|exec-once = newpkg|none"
+
+# 2. That's it! The install script will handle the rest.
+```
 
 **Adding a new config:**
 ```bash
@@ -57,9 +74,47 @@ stow omarchy-config
 # 3. Add to CONFIGS array in install.sh for backup handling
 ```
 
+**Adding a secret:**
+```bash
+# Secrets go in ~/.secrets (created by install.sh or manually)
+echo 'export NEW_API_KEY="xxx"' >> ~/.secrets
+chmod 600 ~/.secrets
+
+# Reference in configs via environment variable
+# e.g., in MCP config: {env:NEW_API_KEY}
+```
+
 **Stow conflicts:** Existing non-symlink configs must be backed up or removed first.
 
 **Symlink editing:** `~/.config/*` edits go directly to repo files (they're symlinks).
+
+## Library Reference
+
+### lib/tui.sh
+Gum wrappers with fallback to basic prompts:
+- `tui_header "Title"` - Section header
+- `tui_confirm "Question?"` - Yes/no prompt
+- `tui_input "Label" "placeholder"` - Text input
+- `tui_secret "Label"` - Password input
+- `tui_choose "opt1" "opt2"` - Single select
+- `tui_spin "Message..." command` - Spinner
+- `tui_success/error/warning/info "msg"` - Status messages
+
+### lib/secrets.sh
+Manages `~/.secrets` file:
+- `secrets_init` - Create secrets file
+- `secrets_get "KEY"` - Get secret value
+- `secrets_set "KEY" "value"` - Set secret
+- `secrets_prompt "KEY" "Label" "hint"` - Interactive prompt
+- `secrets_collect_mcp` - Collect MCP API keys
+
+### lib/packages.sh
+Package registry and installation:
+- `PACKAGE_REGISTRY` - Array of package definitions
+- `pkg_is_installed "name"` - Check if installed
+- `pkg_install_many "pkg1" "pkg2"` - Install with progress
+- `pkg_select_interactive` - Gum-based selection
+- `pkg_generate_autostart` - Generate autostart.conf
 
 ## Nested AGENTS.md
 

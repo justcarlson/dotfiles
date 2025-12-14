@@ -21,7 +21,11 @@ hyprctl reload
 
 ```
 .
-├── install.sh              # Main installer (packages, Hy3, Claude Code, MCP)
+├── install.sh              # Main installer (orchestrator, ~200 lines)
+├── lib/                    # Modular libraries
+│   ├── tui.sh              # Gum wrappers for styled UI
+│   ├── secrets.sh          # ~/.secrets management
+│   └── packages.sh         # Package registry & installer
 ├── omarchy-config/         # Stow package (mirrors ~/)
 │   ├── .config/hypr/       # Hyprland + Hy3 tiling config
 │   ├── .config/ghostty/    # Terminal config
@@ -34,12 +38,23 @@ hyprctl reload
 
 ## Key Files
 
-- `install.sh:41-50` - `OPTIONAL_PACKAGES` array for yay packages
-- `install.sh:178-190` - `CONFIGS` array for stow paths
+- `lib/packages.sh` - `PACKAGE_REGISTRY` array (single source of truth for packages)
+- `install.sh` - `CONFIGS` array for stow paths
+- `lib/secrets.sh` - Secrets management (`~/.secrets`)
+- `lib/tui.sh` - Gum-based UI helpers
 - `omarchy-config/.config/hypr/bindings.conf` - Keybindings
 - `omarchy-config/.config/hypr/autostart.conf` - Startup apps
 
 ## Code Patterns
+
+**Adding a new package:**
+```bash
+# Add to PACKAGE_REGISTRY in lib/packages.sh:
+# Format: "name|category|description|config_files|autostart_entry|post_install"
+"newpkg|Category|Description|none|exec-once = newpkg|none"
+
+# That's it! The install script handles the rest.
+```
 
 **Adding a new config:**
 ```bash
@@ -51,12 +66,13 @@ cp ~/.config/newapp/config.toml omarchy-config/.config/newapp/
 # 3. Re-stow: stow omarchy-config
 ```
 
-**Adding a new optional package:**
+**Adding a secret:**
 ```bash
-# Add to OPTIONAL_PACKAGES in install.sh:
-"packagename|Category|Description"
+# Secrets go in ~/.secrets (created by install.sh or manually)
+echo 'export NEW_API_KEY="xxx"' >> ~/.secrets
+chmod 600 ~/.secrets
 
-# If it needs post-install setup, add to POST_INSTALL_MAP
+# Reference via environment variable in configs
 ```
 
 **Adding a keybinding:**
@@ -67,24 +83,74 @@ bindd = SUPER SHIFT, KEY, Description, exec, command
 
 ## Git Workflow
 
-- Commit format: conventional commits (`feat:`, `fix:`, `docs:`)
-- Push directly to master (personal dotfiles)
+### Making Changes
+
+1. Create a feature branch:
+   ```bash
+   git checkout main
+   git pull
+   git checkout -b feature/description
+   ```
+
+2. Make changes and commit:
+   ```bash
+   git add -A
+   git commit -m "feat: description"
+   ```
+
+3. Push and create PR:
+   ```bash
+   git push -u origin feature/description
+   gh pr create --fill
+   ```
+
+4. After PR merge, clean up:
+   ```bash
+   git checkout main
+   git pull
+   git branch -d feature/description
+   ```
+
+### Creating a Stable Version
+
+After significant changes are tested and stable:
+```bash
+git tag -a v1.1.0 -m "Description of changes"
+git push origin v1.1.0
+```
+
+### Rolling Back to a Stable Version
+
+If something breaks after an update:
+```bash
+git checkout v1.0.0
+stow -R omarchy-config
+```
+
+To return to latest:
+```bash
+git checkout main
+stow -R omarchy-config
+```
+
+**Commit format:** Use conventional commits (`feat:`, `fix:`, `docs:`)
 
 ## Boundaries
 
 **Always:**
 - Place configs in `omarchy-config/` mirroring `~/` structure
-- Update `CONFIGS` array when adding new config paths
+- Add packages to `PACKAGE_REGISTRY` in `lib/packages.sh`
+- Store secrets in `~/.secrets`, never in tracked files
 - Test keybindings with `hyprctl reload` before committing
 
 **Ask first:**
-- Adding packages to `OPTIONAL_PACKAGES`
-- Modifying `install.sh` logic
+- Adding new package dependencies
+- Modifying core install.sh logic
 
 **Never:**
 - Run `install.sh` with sudo
 - Edit files in `~/.local/share/omarchy/` (override in personal configs instead)
-- Commit API keys or credentials
+- Commit API keys or credentials to git
 
 ## Nested Guidance
 

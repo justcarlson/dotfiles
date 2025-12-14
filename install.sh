@@ -1,184 +1,27 @@
 #!/bin/bash
-
 # Omarchy Dotfiles Installation Script
-# This script installs GNU Stow (if needed), backs up existing configs, and stows your Omarchy configuration
+# A delightful setup experience for your Omarchy system
 
 set -e  # Exit on any error
 
-echo "======================================"
-echo "  Omarchy Dotfiles Installation"
-echo "======================================"
-echo ""
+# =============================================================================
+# Setup
+# =============================================================================
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Check if stow is installed
-if ! command -v stow &> /dev/null; then
-    echo "📦 GNU Stow not found. Installing..."
-    if command -v yay &> /dev/null; then
-        yay -S --noconfirm stow
-        echo "✅ Stow installed successfully"
-    else
-        echo "❌ Error: yay package manager not found"
-        echo "Please install stow manually: yay -S stow"
-        exit 1
-    fi
-else
-    echo "✅ GNU Stow is already installed"
-fi
+# Source libraries
+source "$SCRIPT_DIR/lib/tui.sh"
+source "$SCRIPT_DIR/lib/secrets.sh"
+source "$SCRIPT_DIR/lib/packages.sh"
 
-echo ""
+# Setup clean exit on Ctrl+C
+tui_setup_trap
 
-# Build dependencies required for hyprpm (Hyprland Plugin Manager)
-# These are needed to compile plugins like Hy3
-HYPRPM_BUILD_DEPS=(
-    "meson"
-    "cmake"
-    "cpio"
-)
+# =============================================================================
+# Configuration
+# =============================================================================
 
-# Packages not pre-installed on Omarchy but referenced in configs
-# Format: "package|category|description"
-# Note: Cursor is installed via AppImage, not AUR - see README-apps.md
-OPTIONAL_PACKAGES=(
-    "google-chrome-beta|Browser|Default browser (BROWSER)"
-    "tailscale|Networking|Mesh VPN"
-    "solaar|Utilities|Logitech device manager"
-    "tree|Utilities|Directory tree viewer"
-    "bun-bin|Development|JavaScript runtime"
-    "wev|Utilities|Wayland event viewer"
-    "wget|Utilities|Network file downloader"
-    "yazi|File Manager|Terminal file manager with vim-style navigation"
-)
-
-# Track skipped apps for autostart cleanup
-SKIPPED_APPS=()
-
-# Map package names to autostart entry patterns
-declare -A AUTOSTART_MAP=(
-    ["google-chrome-beta"]="exec-once = uwsm-app -- google-chrome-beta"
-    ["pygpt-net"]="exec-once = uwsm-app -- pygpt"
-)
-
-# Map package names to post-install commands
-declare -A POST_INSTALL_MAP=(
-    ["yazi"]="xdg-mime default yazi.desktop inode/directory"
-    ["google-chrome-beta"]="xdg-settings set default-web-browser google-chrome-beta.desktop"
-)
-
-# Display available packages
-display_packages() {
-    local i=1
-    for entry in "${OPTIONAL_PACKAGES[@]}"; do
-        IFS='|' read -r pkg category desc <<< "$entry"
-        printf "  %d. %-24s %s\n" "$i" "$pkg" "- $desc"
-        ((i++))
-    done
-}
-
-# Install packages with progress reporting
-install_packages() {
-    local -a packages=("$@")
-    local total=${#packages[@]}
-    local current=0
-    local -a failed=()
-    local -a skipped=()
-
-    echo ""
-    for pkg in "${packages[@]}"; do
-        ((++current))
-        printf "[%d/%d] Installing %s... " "$current" "$total" "$pkg"
-        
-        # Check if package is already installed
-        if pacman -Qi "$pkg" &>/dev/null; then
-            echo "✅ (already installed)"
-            skipped+=("$pkg")
-            continue
-        fi
-        
-        # Capture output to show on failure (aids debugging)
-        install_output=$(yay -S --noconfirm "$pkg" 2>&1)
-        install_status=$?
-        if [ $install_status -eq 0 ]; then
-            echo "✅"
-            # Run post-install command if defined
-            if [ -n "${POST_INSTALL_MAP[$pkg]}" ]; then
-                eval "${POST_INSTALL_MAP[$pkg]}" 2>/dev/null
-            fi
-        else
-            echo "❌"
-            echo "   Error output:"
-            echo "$install_output" | tail -5 | sed 's/^/   /'
-            failed+=("$pkg")
-        fi
-    done
-
-    if [ ${#skipped[@]} -gt 0 ]; then
-        echo ""
-        echo "ℹ️  Some packages were already installed:"
-        for pkg in "${skipped[@]}"; do
-            echo "   $pkg"
-        done
-    fi
-
-    if [ ${#failed[@]} -gt 0 ]; then
-        echo ""
-        echo "⚠️  Some packages failed to install:"
-        for pkg in "${failed[@]}"; do
-            echo "   yay -S $pkg"
-        done
-    fi
-}
-
-# Interactive package selection
-select_packages() {
-    local -a selected=()
-    echo ""
-    echo "Enter package numbers separated by spaces (e.g., '1 3')"
-    echo "Or press Enter to install all:"
-    read -r selection
-
-    if [ -z "$selection" ]; then
-        # Return all packages
-        for entry in "${OPTIONAL_PACKAGES[@]}"; do
-            IFS='|' read -r pkg _ _ <<< "$entry"
-            selected+=("$pkg")
-        done
-    else
-        for num in $selection; do
-            if [[ "$num" =~ ^[0-9]+$ ]] && [ "$num" -ge 1 ] && [ "$num" -le "${#OPTIONAL_PACKAGES[@]}" ]; then
-                local entry="${OPTIONAL_PACKAGES[$((num-1))]}"
-                IFS='|' read -r pkg _ _ <<< "$entry"
-                selected+=("$pkg")
-            fi
-        done
-    fi
-    echo "${selected[@]}"
-}
-
-# Comment out autostart entries for skipped apps
-cleanup_autostart() {
-    local autostart_file="$HOME/.config/hypr/autostart.conf"
-
-    if [ ! -f "$autostart_file" ]; then
-        return
-    fi
-
-    local modified=false
-    for app in "${SKIPPED_APPS[@]}"; do
-        local pattern="${AUTOSTART_MAP[$app]}"
-        if [ -n "$pattern" ] && grep -q "^${pattern}$" "$autostart_file" 2>/dev/null; then
-            # Comment out the line
-            sed -i "s|^${pattern}$|# ${pattern}  # Commented: not installed|" "$autostart_file"
-            echo "  ✓ Commented out autostart for: $app"
-            modified=true
-        fi
-    done
-
-    if [ "$modified" = true ]; then
-        echo ""
-    fi
-}
-
-# Define configs that will be managed
+# Configs managed by stow (paths relative to ~/)
 CONFIGS=(
     ".config/hypr"
     ".config/waybar"
@@ -194,451 +37,366 @@ CONFIGS=(
     ".local/share/applications/yazi.desktop"
 )
 
-# Check if any configs exist and need backing up
-BACKUP_NEEDED=false
-for config in "${CONFIGS[@]}"; do
-    if [ -e "$HOME/$config" ] && [ ! -L "$HOME/$config" ]; then
-        BACKUP_NEEDED=true
-        break
-    fi
-done
+# Build dependencies for hyprpm (Hy3 plugin)
+HYPRPM_BUILD_DEPS=("meson" "cmake" "cpio")
 
-# Backup existing configs if needed
-if [ "$BACKUP_NEEDED" = true ]; then
-    BACKUP_DIR="$HOME/omarchy-backup-$(date +%Y%m%d-%H%M%S)"
-    echo "📦 Backing up existing configs to: $BACKUP_DIR"
-    mkdir -p "$BACKUP_DIR"
+# =============================================================================
+# Core Functions
+# =============================================================================
+
+install_stow() {
+    if command -v stow &>/dev/null; then
+        tui_success "GNU Stow already installed"
+        return 0
+    fi
+    
+    tui_info "Installing GNU Stow..."
+    if command -v yay &>/dev/null; then
+        if tui_spin "Installing stow..." yay -S --noconfirm stow; then
+            tui_success "Stow installed"
+            return 0
+        fi
+    fi
+    
+    tui_error "Could not install stow. Please install manually: yay -S stow"
+    exit 1
+}
+
+backup_existing_configs() {
+    local needs_backup=false
     
     for config in "${CONFIGS[@]}"; do
-        if [ -e "$HOME/$config" ] && [ ! -L "$HOME/$config" ]; then
-            # Create parent directory structure in backup
-            parent_dir=$(dirname "$config")
-            mkdir -p "$BACKUP_DIR/$parent_dir"
-            
-            # Move the file/directory to backup
-            mv "$HOME/$config" "$BACKUP_DIR/$config"
-            echo "  ✓ Backed up: $config"
+        if [[ -e "$HOME/$config" && ! -L "$HOME/$config" ]]; then
+            needs_backup=true
+            break
         fi
     done
     
-    echo ""
-    echo "✅ Backup complete: $BACKUP_DIR"
-    echo ""
-fi
-
-echo "🔗 Creating symlinks for Omarchy configs..."
-echo ""
-
-# Stow the configuration
-if stow omarchy-config; then
-    echo ""
-    echo "======================================"
-    echo "  ✅ Installation Complete!"
-    echo "======================================"
-    echo ""
-    echo "Your Omarchy dotfiles have been installed."
-    echo ""
-    echo "Configured:"
-    echo "  • Hyprland (window manager)"
-    echo "  • Waybar (top bar)"
-    echo "  • Walker (launcher)"
-    echo "  • Ghostty (terminal)"
-    echo "  • Warp terminal themes (Catppuccin Mocha)"
-    echo "  • uwsm (session manager)"
-    echo "  • Starship (shell prompt)"
-    echo "  • .bashrc and .XCompose"
-    echo ""
-    if [ "$BACKUP_NEEDED" = true ]; then
-        echo "📦 Your original configs were backed up to:"
-        echo "   $BACKUP_DIR"
-        echo ""
+    if [[ "$needs_backup" == "false" ]]; then
+        return 0
     fi
-    echo "⚠️  You may need to restart Hyprland or reboot for all changes to take effect."
-    echo ""
-
-    # Install Hy3 Hyprland Plugin (i3/sway-like tiling)
-    echo "--------------------------------------"
-    echo "  Installing Hy3 Tiling Plugin"
-    echo "--------------------------------------"
-    echo ""
-    echo "Hy3 provides i3/sway-like manual tiling for Hyprland."
-    echo "This requires build dependencies and hyprpm setup."
-    echo ""
-    read -p "Install Hy3 plugin? [Y/n]: " -n 1 -r hy3_choice
-    echo ""
-
-    if [[ ! "${hy3_choice,,}" == "n" ]]; then
-        echo ""
-        echo "📦 Installing hyprpm build dependencies..."
-        
-        # Install build deps
-        missing_deps=()
-        for dep in "${HYPRPM_BUILD_DEPS[@]}"; do
-            if ! pacman -Qi "$dep" &>/dev/null; then
-                missing_deps+=("$dep")
-            fi
-        done
-
-        if [ ${#missing_deps[@]} -gt 0 ]; then
-            echo "   Installing: ${missing_deps[*]}"
-            # Capture output to show on failure (aids debugging)
-            install_output=$(yay -S --noconfirm "${missing_deps[@]}" 2>&1)
-            install_status=$?
-            if [ $install_status -eq 0 ]; then
-                echo "✅ Build dependencies installed"
-            else
-                echo "❌ Failed to install build dependencies"
-                echo "   Error output:"
-                echo "$install_output" | tail -5 | sed 's/^/   /'
-                echo "   Try manually: yay -S ${missing_deps[*]}"
-            fi
-        else
-            echo "✅ Build dependencies already installed"
+    
+    BACKUP_DIR="$HOME/omarchy-backup-$(date +%Y%m%d-%H%M%S)"
+    tui_info "Backing up existing configs to: $BACKUP_DIR"
+    mkdir -p "$BACKUP_DIR"
+    
+    for config in "${CONFIGS[@]}"; do
+        if [[ -e "$HOME/$config" && ! -L "$HOME/$config" ]]; then
+            local parent_dir
+            parent_dir=$(dirname "$config")
+            mkdir -p "$BACKUP_DIR/$parent_dir"
+            mv "$HOME/$config" "$BACKUP_DIR/$config"
+            tui_muted "Backed up: $config"
         fi
+    done
+    
+    tui_success "Backup complete"
+}
 
-        echo ""
-        echo "🔧 Setting up hyprpm (this may take a minute)..."
-        
-        # Capture output and check actual exit code (not grep's exit code)
-        hyprpm_output=$(hyprpm update 2>&1) || true
-        hyprpm_status=${PIPESTATUS[0]}
-        [ -n "$hyprpm_output" ] && echo "$hyprpm_output" | grep -v "^$"
-        if [ $hyprpm_status -eq 0 ]; then
-            echo "✅ hyprpm headers updated"
-        else
-            echo "⚠️  hyprpm update had issues (may be OK if already configured)"
-        fi
-
-        echo ""
-        echo "📦 Installing Hy3 plugin..."
-        
-        # Check if hy3 is already added
-        if hyprpm list 2>/dev/null | grep -q "hy3"; then
-            echo "✅ Hy3 already installed"
-        else
-            # Add hy3 repo (auto-accept with yes)
-            hyprpm_output=$(echo "y" | hyprpm add https://github.com/outfoxxed/hy3 2>&1) || true
-            hyprpm_status=$?
-            [ -n "$hyprpm_output" ] && echo "$hyprpm_output" | grep -v "^$"
-            if [ $hyprpm_status -eq 0 ]; then
-                echo "✅ Hy3 plugin added"
-            else
-                echo "❌ Failed to add Hy3 plugin"
-                echo "   Try manually: hyprpm add https://github.com/outfoxxed/hy3"
-            fi
-        fi
-
-        # Enable hy3
-        hyprpm_output=$(hyprpm enable hy3 2>&1) || true
-        hyprpm_status=$?
-        [ -n "$hyprpm_output" ] && echo "$hyprpm_output" | grep -v "^$"
-        if [ $hyprpm_status -eq 0 ]; then
-            echo "✅ Hy3 enabled"
-        else
-            echo "⚠️  Hy3 enable had issues"
-        fi
-
-        echo ""
-        echo "✅ Hy3 setup complete!"
-        echo "   Restart Hyprland for changes to take effect."
-        echo ""
+stow_configs() {
+    tui_info "Creating symlinks..."
+    
+    if stow omarchy-config; then
+        tui_success "Symlinks created"
+        return 0
     else
-        echo "Skipping Hy3 installation."
-        echo "You can install later with:"
-        echo "   yay -S meson cmake cpio"
-        echo "   hyprpm update"
-        echo "   hyprpm add https://github.com/outfoxxed/hy3"
-        echo "   hyprpm enable hy3"
-        echo ""
+        tui_error "Failed to create symlinks"
+        if [[ -n "$BACKUP_DIR" ]]; then
+            tui_muted "Your configs are backed up at: $BACKUP_DIR"
+        fi
+        exit 1
+    fi
+}
+
+install_hy3() {
+    tui_subheader "Hy3 Tiling Plugin"
+    echo ""
+    tui_info "Hy3 provides i3/sway-like manual tiling for Hyprland"
+    tui_muted "Requires build dependencies and hyprpm setup"
+    echo ""
+    
+    if ! tui_confirm "Install Hy3 plugin?"; then
+        tui_muted "Skipping Hy3. Install later with:"
+        tui_muted "  yay -S meson cmake cpio && hyprpm update"
+        tui_muted "  hyprpm add https://github.com/outfoxxed/hy3 && hyprpm enable hy3"
         
-        # Comment out hy3.conf sourcing if user skips
-        HY3_CONF="$HOME/.config/hypr/hyprland.conf"
-        if [ -f "$HY3_CONF" ] && grep -q "^source = ~/.config/hypr/hy3.conf" "$HY3_CONF"; then
-            sed -i 's|^source = ~/.config/hypr/hy3.conf|# source = ~/.config/hypr/hy3.conf  # Uncomment after installing Hy3|' "$HY3_CONF"
-            echo "ℹ️  Commented out hy3.conf in hyprland.conf (enable after installing Hy3)"
+        # Comment out hy3.conf if skipped
+        local hy3_conf="$HOME/.config/hypr/hyprland.conf"
+        if [[ -f "$hy3_conf" ]] && grep -q "^source = ~/.config/hypr/hy3.conf" "$hy3_conf"; then
+            sed -i 's|^source = ~/.config/hypr/hy3.conf|# source = ~/.config/hypr/hy3.conf  # Uncomment after installing Hy3|' "$hy3_conf"
+            tui_muted "Commented out hy3.conf (enable after installing)"
+        fi
+        return 0
+    fi
+    
+    # Install build dependencies
+    local missing_deps=()
+    for dep in "${HYPRPM_BUILD_DEPS[@]}"; do
+        if ! pacman -Qi "$dep" &>/dev/null; then
+            missing_deps+=("$dep")
+        fi
+    done
+    
+    if [[ ${#missing_deps[@]} -gt 0 ]]; then
+        if tui_spin "Installing build dependencies..." yay -S --noconfirm "${missing_deps[@]}"; then
+            tui_success "Build dependencies installed"
+        else
+            tui_error "Failed to install build dependencies"
+            tui_muted "Try manually: yay -S ${missing_deps[*]}"
+            return 1
+        fi
+    else
+        tui_success "Build dependencies already installed"
+    fi
+    
+    # Setup hyprpm
+    tui_spin "Updating hyprpm headers..." hyprpm update || true
+    
+    # Install hy3
+    if hyprpm list 2>/dev/null | grep -q "hy3"; then
+        tui_success "Hy3 already installed"
+    else
+        if echo "y" | hyprpm add https://github.com/outfoxxed/hy3 &>/dev/null; then
+            tui_success "Hy3 plugin added"
+        else
+            tui_error "Failed to add Hy3 plugin"
+            tui_muted "Try manually: hyprpm add https://github.com/outfoxxed/hy3"
+            return 1
         fi
     fi
+    
+    # Enable hy3
+    hyprpm enable hy3 &>/dev/null || true
+    tui_success "Hy3 enabled - restart Hyprland to activate"
+}
 
+install_claude_code() {
+    tui_subheader "Claude Code"
     echo ""
-
-    # Install Factory CLI
-    echo "--------------------------------------"
-    echo "  Installing Factory CLI"
-    echo "--------------------------------------"
+    tui_info "Anthropic's agentic coding tool for the terminal"
     echo ""
-    if curl -fsSL https://app.factory.ai/cli | sh; then
-        echo "✅ Factory CLI installed successfully"
-    else
-        echo "⚠️  Factory CLI installation failed"
-        echo "   Try manually: curl -fsSL https://app.factory.ai/cli | sh"
+    
+    if ! tui_confirm "Install Claude Code?"; then
+        tui_muted "Skipping. Install later: npm install -g @anthropic-ai/claude-code"
+        return 0
     fi
-    echo ""
-
+    
+    # Ensure npm is available
+    if ! command -v npm &>/dev/null; then
+        tui_info "Installing Node.js..."
+        if ! tui_spin "Installing nodejs..." yay -S --noconfirm nodejs npm; then
+            tui_error "Failed to install Node.js"
+            return 1
+        fi
+    fi
+    
     # Install Claude Code
-    echo "--------------------------------------"
-    echo "  Optional: Install Claude Code"
-    echo "--------------------------------------"
-    echo ""
-    echo "Claude Code is Anthropic's agentic coding tool for the terminal."
-    echo ""
-    read -p "Install Claude Code? [Y/n]: " -n 1 -r claude_choice
-    echo ""
-
-    if [[ ! "${claude_choice,,}" == "n" ]]; then
-        # Check for npm
-        if ! command -v npm &>/dev/null; then
-            echo "📦 npm not found. Installing nodejs..."
-            if yay -S --noconfirm nodejs npm; then
-                echo "✅ nodejs/npm installed"
-            else
-                echo "❌ Failed to install nodejs/npm"
-                echo "   Install manually: yay -S nodejs npm"
-                echo "   Then run: npm install -g @anthropic-ai/claude-code"
-            fi
-        fi
-
-        if command -v npm &>/dev/null; then
-            echo "📦 Installing Claude Code..."
-            if npm install -g @anthropic-ai/claude-code; then
-                echo "✅ Claude Code installed successfully"
-                echo ""
-                echo "Run 'claude' to start and authenticate."
-                echo ""
-
-                # Prompt for status line setup
-                read -p "Configure custom status line (git info + context %)? [Y/n]: " -n 1 -r statusline_choice
-                echo ""
-
-                if [[ ! "${statusline_choice,,}" == "n" ]]; then
-                    if [ -x "$HOME/.local/bin/setup-claude-code-statusline.sh" ]; then
-                        bash "$HOME/.local/bin/setup-claude-code-statusline.sh"
-                    else
-                        echo "⚠️  Status line script not found"
-                        echo "   Run manually after stow: ~/.local/bin/setup-claude-code-statusline.sh"
-                    fi
-                else
-                    echo "Skipping status line setup."
-                    echo "Run later: ~/.local/bin/setup-claude-code-statusline.sh"
-                fi
-            else
-                echo "❌ Claude Code installation failed"
-                echo "   Try manually: npm install -g @anthropic-ai/claude-code"
-            fi
+    if tui_spin "Installing Claude Code..." npm install -g @anthropic-ai/claude-code; then
+        tui_success "Claude Code installed"
+        tui_muted "Run 'claude' to start and authenticate"
+        
+        # Status line setup
+        echo ""
+        if tui_confirm "Configure custom status line (git info + context %)?" && \
+           [[ -x "$HOME/.local/bin/setup-claude-code-statusline.sh" ]]; then
+            bash "$HOME/.local/bin/setup-claude-code-statusline.sh"
         fi
     else
-        echo "Skipping Claude Code. Install later with:"
-        echo "   npm install -g @anthropic-ai/claude-code"
+        tui_error "Failed to install Claude Code"
+        tui_muted "Try manually: npm install -g @anthropic-ai/claude-code"
     fi
-    echo ""
+}
 
-    # Prompt for optional app installation
-    echo "--------------------------------------"
-    echo "  Optional: Install Additional Apps"
-    echo "--------------------------------------"
+install_optional_packages() {
+    tui_subheader "Optional Packages"
     echo ""
-    echo "Your configs reference ${#OPTIONAL_PACKAGES[@]} packages not pre-installed on Omarchy:"
+    
+    # Check what's available
+    local available_count=0
+    for entry in "${PACKAGE_REGISTRY[@]}"; do
+        local name
+        name=$(pkg_get_field "$entry" "name")
+        if ! pkg_is_installed "$name"; then
+            ((available_count++))
+        fi
+    done
+    
+    if [[ $available_count -eq 0 ]]; then
+        tui_success "All optional packages already installed!"
+        return 0
+    fi
+    
+    tui_info "$available_count packages available to install:"
+    pkg_display_available
     echo ""
-    display_packages
-    echo ""
-    read -p "Install apps? [Y]es all / [n]o / [s]elect: " -n 1 -r choice
-    echo ""
-
-    case "${choice,,}" in
-        n)
-            echo ""
-            echo "Skipping app installation."
-            echo "You can install them later with: yay -S <package>"
-            # Track all skipped packages that have autostart entries
-            for entry in "${OPTIONAL_PACKAGES[@]}"; do
-                IFS='|' read -r pkg _ _ <<< "$entry"
-                if [ -n "${AUTOSTART_MAP[$pkg]}" ]; then
-                    SKIPPED_APPS+=("$pkg")
+    
+    local choice
+    choice=$(tui_choose "Install all" "Select packages" "Skip")
+    
+    case "$choice" in
+        "Install all")
+            local all_packages=()
+            for entry in "${PACKAGE_REGISTRY[@]}"; do
+                local name
+                name=$(pkg_get_field "$entry" "name")
+                if ! pkg_is_installed "$name"; then
+                    all_packages+=("$name")
                 fi
             done
+            pkg_install_many "${all_packages[@]}"
             ;;
-        s)
-            selected=($(select_packages))
-            if [ ${#selected[@]} -gt 0 ]; then
-                install_packages "${selected[@]}"
-                echo ""
-                echo "✅ App installation complete!"
-            else
-                echo "No packages selected."
-            fi
-            # Track skipped packages that have autostart entries
-            for entry in "${OPTIONAL_PACKAGES[@]}"; do
-                IFS='|' read -r pkg _ _ <<< "$entry"
-                if [ -n "${AUTOSTART_MAP[$pkg]}" ]; then
-                    local is_selected=false
-                    for sel in "${selected[@]}"; do
-                        if [ "$sel" == "$pkg" ]; then
-                            is_selected=true
-                            break
-                        fi
-                    done
-                    if [ "$is_selected" = false ]; then
-                        SKIPPED_APPS+=("$pkg")
-                    fi
-                fi
-            done
+        "Select packages")
+            pkg_select_interactive
             ;;
-        *)
-            # Default: install all
-            all_packages=()
-            for entry in "${OPTIONAL_PACKAGES[@]}"; do
-                IFS='|' read -r pkg _ _ <<< "$entry"
-                all_packages+=("$pkg")
-            done
-            install_packages "${all_packages[@]}"
-            echo ""
-            echo "✅ App installation complete!"
+        "Skip"|*)
+            tui_muted "Skipping. Install later with: yay -S <package>"
             ;;
     esac
+    
+    # Regenerate autostart-apps.conf based on installed packages
+    tui_info "Updating autostart configuration..."
+    pkg_write_autostart_file
+    tui_success "autostart-apps.conf updated"
+}
 
-    # Prompt for pipx-based apps
+configure_secrets() {
+    tui_subheader "API Keys & Secrets"
     echo ""
-    echo "--------------------------------------"
-    echo "  Optional: Install PyGPT via pipx"
-    echo "--------------------------------------"
+    tui_info "Store API keys securely in ~/.secrets (never committed to git)"
     echo ""
+    
+    if ! tui_confirm "Configure API keys?"; then
+        tui_muted "Skipping. Add keys later to ~/.secrets"
+        return 0
+    fi
+    
+    secrets_init
+    secrets_collect_mcp
+    
+    # Configure MCP for tools that need it
+    local exa_key ref_key
+    exa_key=$(secrets_get "EXA_API_KEY")
+    ref_key=$(secrets_get "REF_API_KEY")
+    
+    if [[ -n "$exa_key" || -n "$ref_key" ]]; then
+        configure_mcp_servers "$exa_key" "$ref_key"
+    fi
+    
+    echo ""
+    secrets_verify_permissions
+    secrets_verify_bashrc
+}
 
-    # Auto-install pipx if not available
-    if ! command -v pipx &>/dev/null; then
-        echo "📦 pipx not found. Installing..."
-        if yay -S --noconfirm python-pipx &>/dev/null; then
-            echo "✅ pipx installed successfully"
-            # Ensure pipx path is available in current session
-            export PATH="$HOME/.local/bin:$PATH"
-            # Persist PATH in shell configs
-            pipx ensurepath --force &>/dev/null
-        else
-            echo "❌ Failed to install pipx"
-            echo "   Install manually with: yay -S python-pipx"
-            echo "   Then run: pipx install pygpt-net"
+configure_mcp_servers() {
+    local exa_key="$1"
+    local ref_key="$2"
+    
+    tui_info "Configuring MCP servers..."
+    
+    # Build MCP config JSON for Factory and Cursor
+    local mcp_config='{"mcpServers":{'
+    local first=true
+    
+    if [[ -n "$exa_key" ]]; then
+        mcp_config+='"exa":{"type":"http","url":"https://mcp.exa.ai/mcp?exaApiKey='"$exa_key"'","headers":{}}'
+        first=false
+    fi
+    
+    if [[ -n "$ref_key" ]]; then
+        [[ "$first" == "false" ]] && mcp_config+=','
+        mcp_config+='"Ref":{"type":"http","url":"https://api.ref.tools/mcp?apiKey='"$ref_key"'","headers":{}}'
+    fi
+    
+    mcp_config+='}}'
+    
+    # Write configs
+    mkdir -p "$HOME/.factory" "$HOME/.cursor"
+    echo "$mcp_config" > "$HOME/.factory/mcp.json"
+    echo "$mcp_config" > "$HOME/.cursor/mcp.json"
+    chmod 600 "$HOME/.factory/mcp.json" "$HOME/.cursor/mcp.json"
+    
+    tui_success "MCP configs created for Factory and Cursor"
+    
+    # Configure Claude Code if installed
+    if command -v claude &>/dev/null; then
+        if [[ -n "$exa_key" ]]; then
+            claude mcp add exa --transport http "https://mcp.exa.ai/mcp?exaApiKey=$exa_key" --scope user 2>/dev/null && \
+                tui_muted "Added exa MCP to Claude Code"
+        fi
+        if [[ -n "$ref_key" ]]; then
+            claude mcp add Ref --transport http "https://api.ref.tools/mcp?apiKey=$ref_key" --scope user 2>/dev/null && \
+                tui_muted "Added Ref MCP to Claude Code"
         fi
     fi
+}
 
-    if command -v pipx &>/dev/null; then
-        read -p "Install PyGPT AI assistant? [Y/n]: " -n 1 -r pygpt_choice
-        echo ""
-
-        if [[ ! "${pygpt_choice,,}" == "n" ]]; then
-            echo "Installing PyGPT via pipx..."
-            if pipx install pygpt-net; then
-                echo "✅ PyGPT installed successfully"
-                echo ""
-                echo "Run with: pygpt"
-            else
-                echo "❌ PyGPT installation failed"
-                echo "   Try manually: pipx install pygpt-net"
-            fi
-        else
-            echo "Skipping PyGPT. Install later with: pipx install pygpt-net"
-            SKIPPED_APPS+=("pygpt-net")
-        fi
-    fi
-
-    # Clean up autostart entries for skipped apps
-    if [ ${#SKIPPED_APPS[@]} -gt 0 ]; then
-        echo ""
-        echo "🧹 Cleaning up autostart for skipped apps..."
-        cleanup_autostart
-    fi
-
-    # Configure MCP servers for AI tools
+show_summary() {
+    tui_header "Setup Complete!"
+    
+    echo "Your Omarchy dotfiles are now installed."
     echo ""
-    echo "--------------------------------------"
-    echo "  Optional: Configure MCP Servers"
-    echo "--------------------------------------"
+    echo "Configured:"
+    tui_muted "Hyprland (window manager)"
+    tui_muted "Waybar (status bar)"
+    tui_muted "Walker (launcher)"
+    tui_muted "Ghostty (terminal)"
+    tui_muted "Starship (prompt)"
+    tui_muted ".bashrc and .XCompose"
     echo ""
-    echo "MCP servers provide AI tools with web search and documentation capabilities."
-    echo "These configs are stored locally (not in git) to protect your API keys."
-    echo ""
-
-    read -p "Configure MCP servers for Factory CLI, Cursor, and Claude Code? [Y/n]: " -n 1 -r mcp_choice
-    echo ""
-
-    if [[ ! "${mcp_choice,,}" == "n" ]]; then
-        read -p "Exa API key (get one at https://exa.ai): " exa_key
-        read -p "Ref API key (get one at https://ref.tools): " ref_key
-
-        if [ -n "$exa_key" ] || [ -n "$ref_key" ]; then
-            # Build MCP config JSON for Factory and Cursor
-            MCP_CONFIG='{"mcpServers":{'
-            first=true
-
-            if [ -n "$exa_key" ]; then
-                MCP_CONFIG+='"exa":{"type":"http","url":"https://mcp.exa.ai/mcp?exaApiKey='"$exa_key"'","headers":{}}'
-                first=false
-            fi
-
-            if [ -n "$ref_key" ]; then
-                [ "$first" = false ] && MCP_CONFIG+=','
-                MCP_CONFIG+='"Ref":{"type":"http","url":"https://api.ref.tools/mcp?apiKey='"$ref_key"'","headers":{}}'
-            fi
-
-            MCP_CONFIG+='}}'
-
-            # Create directories and write configs for Factory and Cursor
-            mkdir -p "$HOME/.factory" "$HOME/.cursor"
-            echo "$MCP_CONFIG" > "$HOME/.factory/mcp.json"
-            echo "$MCP_CONFIG" > "$HOME/.cursor/mcp.json"
-            chmod 600 "$HOME/.factory/mcp.json" "$HOME/.cursor/mcp.json"
-
-            echo "✅ MCP configs created:"
-            echo "   ~/.factory/mcp.json"
-            echo "   ~/.cursor/mcp.json"
-
-            # Configure Claude Code MCP servers if claude is installed
-            if command -v claude &>/dev/null; then
-                echo ""
-                echo "📦 Configuring Claude Code MCP servers..."
-
-                if [ -n "$exa_key" ]; then
-                    if claude mcp add exa --transport http "https://mcp.exa.ai/mcp?exaApiKey=$exa_key" --scope user 2>/dev/null; then
-                        echo "   ✓ Added exa MCP server"
-                    else
-                        echo "   ⚠️  Failed to add exa MCP server"
-                    fi
-                fi
-
-                if [ -n "$ref_key" ]; then
-                    if claude mcp add Ref --transport http "https://api.ref.tools/mcp?apiKey=$ref_key" --scope user 2>/dev/null; then
-                        echo "   ✓ Added Ref MCP server"
-                    else
-                        echo "   ⚠️  Failed to add Ref MCP server"
-                    fi
-                fi
-
-                echo "✅ Claude Code MCP servers configured"
-            else
-                echo ""
-                echo "ℹ️  Claude Code not installed - skipping Claude Code MCP config"
-                echo "   After installing Claude Code, run:"
-                if [ -n "$exa_key" ]; then
-                    echo "   claude mcp add exa --transport http 'https://mcp.exa.ai/mcp?exaApiKey=YOUR_KEY' --scope user"
-                fi
-                if [ -n "$ref_key" ]; then
-                    echo "   claude mcp add Ref --transport http 'https://api.ref.tools/mcp?apiKey=YOUR_KEY' --scope user"
-                fi
-            fi
-        else
-            echo "No API keys provided. Skipping MCP configuration."
-        fi
-    else
-        echo "Skipping MCP configuration."
-    fi
-
-    echo ""
-else
-    echo ""
-    echo "❌ Installation failed"
-    echo ""
-    echo "Please check the error messages above."
-    echo ""
-    if [ "$BACKUP_NEEDED" = true ]; then
-        echo "Your original configs are backed up in: $BACKUP_DIR"
+    
+    if [[ -n "$BACKUP_DIR" ]]; then
+        tui_info "Original configs backed up to:"
+        tui_muted "$BACKUP_DIR"
         echo ""
     fi
-    exit 1
-fi
+    
+    tui_warning "Restart Hyprland or reboot for all changes to take effect"
+}
+
+# =============================================================================
+# Main Installation Flow
+# =============================================================================
+
+main() {
+    tui_header "Omarchy Dotfiles"
+    
+    # Ensure gum is available for best experience
+    tui_ensure_gum
+    
+    # Step 1: Prerequisites
+    tui_step 1 6 "Checking prerequisites"
+    install_stow
+    echo ""
+    
+    # Step 2: Backup & Stow
+    tui_step 2 6 "Installing configs"
+    backup_existing_configs
+    stow_configs
+    echo ""
+    
+    # Step 3: Hy3 Plugin
+    tui_step 3 6 "Hyprland plugins"
+    install_hy3
+    echo ""
+    
+    # Step 4: Claude Code
+    tui_step 4 6 "Development tools"
+    install_claude_code
+    echo ""
+    
+    # Step 5: Optional Packages
+    tui_step 5 6 "Optional packages"
+    install_optional_packages
+    echo ""
+    
+    # Step 6: Secrets & MCP
+    tui_step 6 6 "API keys & secrets"
+    configure_secrets
+    echo ""
+    
+    # Done!
+    show_summary
+}
+
+# Run main
+main "$@"

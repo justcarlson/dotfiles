@@ -2,20 +2,34 @@
 
 Personal Hyprland config for Omarchy Linux. Uses Hy3 plugin for i3-like tiling.
 
-## Key Files
+## Config Structure
 
-- `hyprland.conf` - Main config, sources all others
-- `hy3.conf` - Hy3 plugin settings + keybind overrides
-- `bindings.conf` - Personal app launch keybindings
-- `autostart.conf` - Startup applications + Droid sessions
-- `monitors.conf` - Display configuration
+```
+~/.config/hypr/
+├── hyprland.conf         # Main config, sources all others
+├── autostart.conf        # Core autostart (plugins, essential services)
+├── autostart-apps.conf   # App autostart (generated from package registry)
+├── autostart-claude.conf # Claude Code workspace sessions (optional)
+├── hy3.conf              # Hy3 plugin settings + keybind overrides
+├── bindings.conf         # Personal app launch keybindings
+├── monitors.conf         # Display configuration
+├── input.conf            # Input device settings
+├── looknfeel.conf        # Theme and appearance
+└── envs.conf             # Environment variables
+```
 
-## Tech Stack
+## Autostart Files
 
-- **Hyprland** - Wayland compositor
-- **Hy3 plugin** - i3/sway-like manual tiling (via hyprpm)
-- **uwsm** - Session manager for app launching
-- **Ghostty** - Terminal emulator
+| File | Purpose | Regenerated? |
+|------|---------|--------------|
+| `autostart.conf` | Core services (hyprpm) | No |
+| `autostart-apps.conf` | Apps from package registry | Yes, by install.sh |
+| `autostart-claude.conf` | Claude Code terminals | No |
+
+**Guard pattern:** All app entries use guards for graceful degradation:
+```ini
+exec-once = command -v app &>/dev/null && uwsm-app -- app
+```
 
 ## Commands
 
@@ -30,13 +44,18 @@ hyprland --config ~/.config/hypr/hyprland.conf --check
 hyprpm list                    # List installed plugins
 hyprpm update                  # Update headers + plugins
 hyprpm enable hy3              # Enable Hy3 after install
+
+# Regenerate autostart-apps.conf
+cd ~/.dotfiles && source lib/packages.sh && pkg_write_autostart_file
 ```
 
 ## Boundaries
 
 - ✅ **Always:** Test with `hyprctl reload` after changes
+- ✅ **Always:** Use guard patterns for optional apps
 - ⚠️ **Ask first:** Modifying default Omarchy bindings (they live in `~/.local/share/omarchy/`)
 - 🚫 **Never:** Edit files in `~/.local/share/omarchy/` - override in personal configs instead
+- 🚫 **Never:** Hardcode app paths without guards
 
 ## Patterns
 
@@ -51,6 +70,11 @@ bindd = SUPER, KEY, Desc, dispatcher, args
 exec-once = [workspace 1] uwsm-app -- app-name
 ```
 
+**Guarded autostart (preferred):**
+```ini
+exec-once = command -v app &>/dev/null && uwsm-app -- app
+```
+
 **Source order matters** - later sources override earlier ones.
 
 ## Autostart Gotchas
@@ -59,19 +83,19 @@ Hyprland's `exec-once` passes arguments literally. For complex commands, use wra
 
 ```ini
 # Wrong - arguments get mangled
-exec-once = uwsm-app -- xdg-terminal-exec -e droid -m model
+exec-once = uwsm-app -- xdg-terminal-exec -e claude -m model
 
 # Correct - use wrapper script or shell
-exec-once = uwsm-app -- ghostty -e bash -c 'droid; exec $SHELL'
+exec-once = uwsm-app -- ghostty -e bash -c 'claude; exec $SHELL'
 ```
 
-## Factory CLI (droid) Quick Reference
+## Claude Code Quick Reference
 
 ```bash
-droid                    # Interactive mode (no model flag)
-droid "prompt"           # Start with context
-droid --resume           # Resume last session
-droid exec -m model      # Exec mode supports -m flag
+claude                   # Interactive mode
+claude --continue        # Continue last session
+claude --resume          # Resume with picker
+claude --print           # Non-interactive output
 ```
 
-**Note:** Model selection (`-m`) only works in `droid exec`, not interactive mode.
+Aliases in `.bashrc`: `c-yolo`, `c-continue`, `c-resume`, `c-print`

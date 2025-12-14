@@ -13,6 +13,9 @@ alias cursor='cursor-wayland'
 alias code='cursor-wayland'
 export PATH="$HOME/.local/bin:$PATH"
 
+# Source secrets (API keys, tokens - not tracked in git)
+[[ -f ~/.secrets ]] && source ~/.secrets
+
 # 1Password SSH agent
 export SSH_AUTH_SOCK=~/.1password/agent.sock
 
@@ -33,3 +36,6 @@ export PATH="$PATH:/home/justincarlson/.local/bin"
 
 # Created by `pipx` on 2025-12-08 17:46:40
 export PATH="$PATH:/home/justincarlson/.dotfiles/omarchy-config/.local/bin"
+
+# opencode
+export PATH=/home/justincarlson/.opencode/bin:$PATH
