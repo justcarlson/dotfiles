@@ -2,6 +2,22 @@
 
 Justin's dotfiles and configuration for Omarchy Linux (Arch-based with Hyprland).
 
+<details>
+<summary><strong>Prerequisites (1Password SSH)</strong></summary>
+
+This repo requires SSH authentication. Configure 1Password SSH agent first:
+
+1. Open 1Password > Settings > Developer
+2. Enable "Use the SSH agent"
+3. Add your GitHub SSH key to 1Password
+4. Create/update `~/.ssh/config`:
+   ```
+   Host github.com
+     IdentityAgent ~/.1password/agent.sock
+   ```
+
+</details>
+
 ## Quick Start
 
 ```bash
@@ -20,54 +36,6 @@ The installer backs up existing configs, creates symlinks via GNU Stow, and offe
 ```
 
 > **Note:** Do NOT use `sudo` - the script doesn't need it.
-
-## What's Included
-
-| Path | Description |
-|------|-------------|
-| `omarchy-config/` | Dotfiles (Hyprland, Waybar, Ghostty, Walker, etc.) |
-| `lib/` | Modular libraries (tui.sh, secrets.sh, packages.sh) |
-| `install.sh` | Main installer |
-
-**Configured apps:** Hyprland, Waybar, Walker, Ghostty, uwsm, Starship, Typora themes
-
-## Customization
-
-After installation, edit:
-- `~/.config/hypr/bindings.conf` - Keybindings
-- `~/.config/hypr/autostart-claude.conf` - Claude Code workspaces
-- `~/.secrets` - API keys for MCP integrations
-
-## Updating
-
-Since Stow creates symlinks, edits in `~/.config/` automatically update the repo.
-
-```bash
-cd ~/.dotfiles && git pull   # Pull latest (changes apply immediately)
-```
-
-## Documentation
-
-- **[Keybindings](README-keybindings.md)** - Keyboard shortcuts and aliases
-- **[Packages](README-apps.md)** - Optional and pre-installed packages
-
----
-
-<details>
-<summary><strong>Prerequisites (1Password SSH)</strong></summary>
-
-This repo requires SSH authentication. Configure 1Password SSH agent first:
-
-1. Open 1Password > Settings > Developer
-2. Enable "Use the SSH agent"
-3. Add your GitHub SSH key to 1Password
-4. Create/update `~/.ssh/config`:
-   ```
-   Host github.com
-     IdentityAgent ~/.1password/agent.sock
-   ```
-
-</details>
 
 <details>
 <summary><strong>Resolving Stow Conflicts</strong></summary>
@@ -96,6 +64,55 @@ stow --adopt omarchy-config
 ```
 
 </details>
+
+<details>
+<summary><strong>Troubleshooting</strong></summary>
+
+**"Permission denied" when running scripts:**
+```bash
+chmod +x install.sh
+```
+
+**"command not found" with sudo:**
+Don't use sudo. Run scripts as your regular user.
+
+**Stow conflicts:**
+See "Resolving Stow Conflicts" section above.
+
+**Installation failed mid-way:**
+The installer automatically rolls back if stow fails. Your original configs are preserved in `~/omarchy-backup-*/`. To manually restore:
+```bash
+cd ~/.dotfiles
+stow -D omarchy-config
+cp -r ~/omarchy-backup-TIMESTAMP/.config/hypr ~/.config/
+```
+
+</details>
+
+## What's Included
+
+| Path | Description |
+|------|-------------|
+| `omarchy-config/` | Dotfiles (Hyprland, Waybar, Ghostty, Walker, etc.) |
+| `lib/` | Modular libraries (tui.sh, secrets.sh, packages.sh) |
+| `install.sh` | Main installer |
+
+**Configured apps:** Hyprland, Waybar, Walker, Ghostty, uwsm, Starship, Typora themes
+
+## Customization
+
+After installation, edit:
+- `~/.config/hypr/bindings.conf` - Keybindings
+- `~/.config/hypr/autostart-claude.conf` - Claude Code workspaces
+- `~/.secrets` - API keys for MCP integrations
+
+## Updating
+
+Since Stow creates symlinks, edits in `~/.config/` automatically update the repo.
+
+```bash
+cd ~/.dotfiles && git pull   # Pull latest (changes apply immediately)
+```
 
 <details>
 <summary><strong>Git Workflow (PRs & Branches)</strong></summary>
@@ -161,31 +178,7 @@ Your backup configs will still be in `~/omarchy-backup-*/` if you need them.
 
 </details>
 
-<details>
-<summary><strong>Troubleshooting</strong></summary>
+## Documentation
 
-**"Permission denied" when running scripts:**
-```bash
-chmod +x install.sh
-```
-
-**"command not found" with sudo:**
-Don't use sudo. Run scripts as your regular user.
-
-**Stow conflicts:**
-See "Resolving Stow Conflicts" section above.
-
-**Installation failed mid-way:**
-The installer automatically rolls back if stow fails. Your original configs are preserved in `~/omarchy-backup-*/`. To manually restore:
-```bash
-cd ~/.dotfiles
-stow -D omarchy-config
-cp -r ~/omarchy-backup-TIMESTAMP/.config/hypr ~/.config/
-```
-
-**Preview changes before installing:**
-```bash
-./install.sh --check
-```
-
-</details>
+- **[Keybindings](README-keybindings.md)** - Keyboard shortcuts and aliases
+- **[Packages](README-apps.md)** - Optional and pre-installed packages
