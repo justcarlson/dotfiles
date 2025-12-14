@@ -2,37 +2,50 @@
 
 ## Hyprland Keybindings
 
-### Applications
+### Core Apps (always available)
 
 | Keybinding | Action |
 |------------|--------|
 | `Super + Return` | Terminal (in current directory) |
-| `Super + Shift + F` | File manager (Nautilus) |
 | `Super + Shift + B` | Browser |
 | `Super + Shift + Alt + B` | Browser (private window) |
-| `Super + Shift + M` | Music (Spotify) |
 | `Super + Shift + N` | Editor |
-| `Super + Shift + T` | Activity monitor (btop) |
-| `Super + Shift + D` | Docker (lazydocker) |
+| `Super + Shift + /` | 1Password |
+
+### Optional Apps (guarded)
+
+These show a notification with install instructions if the app isn't installed.
+
+| Keybinding | Action | Install |
+|------------|--------|---------|
+| `Super + Shift + F` | File manager (yazi) | `yay -S yazi` |
+| `Super + Shift + T` | Activity monitor (btop) | `yay -S btop` |
+| `Super + Shift + D` | Docker (lazydocker) | `yay -S lazydocker` |
+| `Super + Shift + W` | Typora | `yay -S typora` |
+| `Super + Shift + I` | PyGPT | `yay -S pygpt-net` |
+| `Super + Shift + E` | Cursor | See README-apps.md |
+
+### Communication Apps
+
+| Keybinding | Action |
+|------------|--------|
+| `Super + Shift + M` | Music (Spotify) |
 | `Super + Shift + G` | Signal |
 | `Super + Shift + O` | Obsidian |
-| `Super + Shift + W` | Typora |
-| `Super + Shift + /` | 1Password |
-| `Super + Shift + I` | PyGPT |
-| `Super + Shift + E` | Cursor / Email |
 
 ### AI Tools
 
 | Keybinding | Action |
 |------------|--------|
 | `Super + Shift + A` | Claude (web) |
-| `Super + Shift + Alt + A` | Factory CLI (droid) |
+| `Super + Shift + Alt + A` | Claude Code (terminal) |
 
 ### Web Apps
 
 | Keybinding | Action |
 |------------|--------|
 | `Super + Shift + C` | Google Calendar |
+| `Super + Shift + E` | Email (Gmail) |
 | `Super + Shift + Y` | YouTube |
 | `Super + Shift + Alt + G` | WhatsApp |
 | `Super + Shift + Ctrl + G` | Google Messages |
@@ -58,21 +71,11 @@
 | `cursor` | `cursor-wayland` |
 | `code` | `cursor-wayland` |
 
-### Factory CLI (droid)
-
-#### Exec Mode (non-interactive, supports model selection)
+### Claude Code
 
 | Alias | Command | Description |
 |-------|---------|-------------|
-| `d-skip` | `droid exec --skip-permissions-unsafe` | Exec without permission prompts |
-| `d-yolo` | `droid exec --skip-permissions-unsafe` | Exec without permission prompts |
-| `d-yolo-o` | `droid exec --skip-permissions-unsafe -m claude-opus-4-5-20251101` | + Opus model |
-| `d-yolo-s` | `droid exec --skip-permissions-unsafe -m claude-sonnet-4-5-20250929` | + Sonnet model |
-| `d-yolo-h` | `droid exec --skip-permissions-unsafe -m claude-haiku-4-5-20251001` | + Haiku model |
-
-#### Interactive Mode
-
-| Alias | Command | Description |
-|-------|---------|-------------|
-| `d-resume` | `droid --resume` | Resume last session |
-| `d-r` | `droid --resume` | Resume last session (short) |
+| `c-yolo` | `claude --dangerously-skip-permissions` | Skip permission prompts |
+| `c-continue` | `claude --continue` | Continue last session |
+| `c-resume` | `claude --resume` | Resume with session picker |
+| `c-print` | `claude --print` | Non-interactive output |
