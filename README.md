@@ -2,8 +2,12 @@
   <h1 align="center">Justin's Dotfiles</h1>
   <p align="center">
     <em>Modular dotfiles for Omarchy Linux + Hyprland</em>
-    <!-- <br /> -->
-    <!-- Optimized for Apple T2 MacBooks -->
+  </p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/Arch_Linux-1793D1?style=flat&logo=arch-linux&logoColor=white" alt="Arch Linux">
+    <img src="https://img.shields.io/badge/Hyprland-58E1FF?style=flat&logo=hyprland&logoColor=black" alt="Hyprland">
+    <img src="https://img.shields.io/badge/version-2.0.0-blue?style=flat" alt="Version">
+    <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="License">
   </p>
 </p>
 
