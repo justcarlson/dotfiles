@@ -38,7 +38,8 @@ These show a notification with install instructions if the app isn't installed.
 | Keybinding | Action |
 |------------|--------|
 | `Super + Shift + A` | Claude (web) |
-| `Super + Shift + Alt + A` | Claude Code (terminal) |
+| `Super + Shift + Alt + A` | OpenCode (primary CLI agent) |
+| `Super + Shift + Ctrl + A` | Claude Code (fallback CLI agent) |
 
 ### Web Apps
 
@@ -71,7 +72,16 @@ These show a notification with install instructions if the app isn't installed.
 | `cursor` | `cursor-wayland` |
 | `code` | `cursor-wayland` |
 
-### Claude Code
+### OpenCode (Primary CLI Agent)
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `oc` | `opencode` | Launch OpenCode |
+| `oc-c` | `opencode --continue` | Continue last session |
+| `oc-s` | `opencode --session` | Resume specific session |
+| `oc-run` | `opencode run` | Non-interactive run |
+
+### Claude Code (Fallback CLI Agent)
 
 | Alias | Command | Description |
 |-------|---------|-------------|

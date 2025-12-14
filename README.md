@@ -113,7 +113,8 @@ After install, edit these files:
 | File | Purpose |
 |------|---------|
 | `~/.config/hypr/bindings.conf` | Keybindings |
-| `~/.config/hypr/autostart-claude.conf` | Claude Code workspaces |
+| `~/.config/hypr/autostart-opencode.conf` | OpenCode workspaces |
+| `~/.config/opencode/opencode.jsonc` | OpenCode MCP config |
 | `~/.secrets` | API keys for MCP |
 
 Symlinks mean your edits update the repo automatically.

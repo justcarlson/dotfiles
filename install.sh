@@ -78,6 +78,7 @@ CONFIGS=(
     ".config/walker"
     ".config/ghostty"
     ".config/uwsm"
+    ".config/opencode"
     ".config/starship.toml"
     ".config/Typora/themes/ia_typora.css"
     ".config/Typora/themes/ia_typora_night.css"
@@ -302,40 +303,59 @@ install_hy3() {
     tui_success "Hy3 enabled - restart Hyprland to activate"
 }
 
-install_claude_code() {
-    tui_subheader "Claude Code"
+install_cli_agents() {
+    tui_subheader "CLI Coding Agents"
     echo ""
-    tui_info "Anthropic's agentic coding tool for the terminal"
+    tui_info "OpenCode (primary) - Open source AI coding agent"
+    tui_info "Claude Code (fallback) - Anthropic's agentic coding tool"
     echo ""
     
-    if ! tui_confirm "Install Claude Code?"; then
-        tui_muted "Skipping. Install later: npm install -g @anthropic-ai/claude-code"
-        return 0
-    fi
-    
-    # Ensure npm is available
-    if ! command -v npm &>/dev/null; then
-        tui_info "Installing Node.js..."
-        if ! tui_spin "Installing nodejs..." yay -S --noconfirm nodejs npm; then
-            tui_error "Failed to install Node.js"
-            return 1
-        fi
-    fi
-    
-    # Install Claude Code
-    if tui_spin "Installing Claude Code..." npm install -g @anthropic-ai/claude-code; then
-        tui_success "Claude Code installed"
-        tui_muted "Run 'claude' to start and authenticate"
-        
-        # Status line setup
-        echo ""
-        if tui_confirm "Configure custom status line (git info + context %)?" && \
-           [[ -x "$HOME/.local/bin/setup-claude-code-statusline.sh" ]]; then
-            bash "$HOME/.local/bin/setup-claude-code-statusline.sh"
+    # Install OpenCode (primary)
+    if command -v opencode &>/dev/null; then
+        tui_success "OpenCode already installed"
+    elif tui_confirm "Install OpenCode (primary CLI agent)?"; then
+        if tui_spin "Installing OpenCode..." bash -c 'curl -fsSL https://opencode.ai/install | bash'; then
+            tui_success "OpenCode installed"
+            tui_muted "Run 'opencode' to start"
+        else
+            tui_error "Failed to install OpenCode"
+            tui_muted "Try manually: curl -fsSL https://opencode.ai/install | bash"
         fi
     else
-        tui_error "Failed to install Claude Code"
-        tui_muted "Try manually: npm install -g @anthropic-ai/claude-code"
+        tui_muted "Skipping OpenCode. Install later: curl -fsSL https://opencode.ai/install | bash"
+    fi
+    
+    echo ""
+    
+    # Install Claude Code (fallback)
+    if command -v claude &>/dev/null; then
+        tui_success "Claude Code already installed"
+    elif tui_confirm "Install Claude Code (fallback CLI agent)?"; then
+        # Ensure npm is available
+        if ! command -v npm &>/dev/null; then
+            tui_info "Installing Node.js..."
+            if ! tui_spin "Installing nodejs..." yay -S --noconfirm nodejs npm; then
+                tui_error "Failed to install Node.js"
+                return 1
+            fi
+        fi
+        
+        if tui_spin "Installing Claude Code..." npm install -g @anthropic-ai/claude-code; then
+            tui_success "Claude Code installed"
+            tui_muted "Run 'claude' to start and authenticate"
+            
+            # Status line setup
+            echo ""
+            if tui_confirm "Configure custom status line (git info + context %)?" && \
+               [[ -x "$HOME/.local/bin/setup-claude-code-statusline.sh" ]]; then
+                bash "$HOME/.local/bin/setup-claude-code-statusline.sh"
+            fi
+        else
+            tui_error "Failed to install Claude Code"
+            tui_muted "Try manually: npm install -g @anthropic-ai/claude-code"
+        fi
+    else
+        tui_muted "Skipping Claude Code. Install later: npm install -g @anthropic-ai/claude-code"
     fi
 }
 
@@ -425,7 +445,7 @@ configure_mcp_servers() {
     
     tui_info "Configuring MCP servers..."
     
-    # Build MCP config JSON for Factory and Cursor
+    # Build MCP config JSON for Cursor (OpenCode uses ~/.config/opencode/opencode.jsonc)
     local mcp_config='{"mcpServers":{'
     local first=true
     
@@ -441,13 +461,13 @@ configure_mcp_servers() {
     
     mcp_config+='}}'
     
-    # Write configs
-    mkdir -p "$HOME/.factory" "$HOME/.cursor"
-    echo "$mcp_config" > "$HOME/.factory/mcp.json"
+    # Write config for Cursor
+    mkdir -p "$HOME/.cursor"
     echo "$mcp_config" > "$HOME/.cursor/mcp.json"
-    chmod 600 "$HOME/.factory/mcp.json" "$HOME/.cursor/mcp.json"
+    chmod 600 "$HOME/.cursor/mcp.json"
     
-    tui_success "MCP configs created for Factory and Cursor"
+    tui_success "MCP config created for Cursor"
+    tui_muted "OpenCode MCP config managed via ~/.config/opencode/opencode.jsonc"
     
     # Configure Claude Code if installed
     if command -v claude &>/dev/null; then
@@ -521,12 +541,12 @@ main() {
     fi
     echo ""
     
-    # Step 4: Claude Code
-    tui_step 4 6 "Development tools"
+    # Step 4: CLI Agents (OpenCode + Claude Code)
+    tui_step 4 6 "CLI coding agents"
     if [[ "$DRY_RUN" == "true" ]]; then
-        tui_info "[DRY RUN] Would prompt for Claude Code installation"
+        tui_info "[DRY RUN] Would prompt for CLI agent installation (OpenCode, Claude Code)"
     else
-        install_claude_code
+        install_cli_agents
     fi
     echo ""
     

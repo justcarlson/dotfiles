@@ -34,13 +34,14 @@ These are included in Omarchy's base packages and referenced in bindings.conf:
 | 1password-beta | Password manager | Super+Shift+/ |
 | nautilus | GUI file manager | CLI (`nautilus .`) |
 
-## Installed via curl (automatic)
+## CLI Coding Agents
 
-Factory CLI is installed automatically during `./install.sh`:
+Installed during `./install.sh`:
 
 | Package | Purpose | Install Command |
 |---------|---------|-----------------|
-| Factory CLI | Factory AI CLI | `curl -fsSL https://app.factory.ai/cli \| sh` |
+| [OpenCode](https://github.com/sst/opencode) | Primary CLI agent (open source) | `curl -fsSL https://opencode.ai/install \| bash` |
+| [Claude Code](https://github.com/anthropics/claude-code) | Fallback CLI agent (Anthropic) | `npm i -g @anthropic-ai/claude-code` |
 
 ## Installed via pipx
 

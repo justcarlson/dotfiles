@@ -19,7 +19,13 @@ export PATH="$HOME/.local/bin:$PATH"
 # 1Password SSH agent
 export SSH_AUTH_SOCK=~/.1password/agent.sock
 
-# Claude Code aliases
+# OpenCode aliases (primary CLI agent)
+alias oc='opencode'
+alias oc-c='opencode --continue'
+alias oc-s='opencode --session'
+alias oc-run='opencode run'
+
+# Claude Code aliases (fallback CLI agent)
 alias c-yolo='claude --dangerously-skip-permissions'
 alias c-yolo-o='claude --dangerously-skip-permissions --model opus'
 alias c-yolo-s='claude --dangerously-skip-permissions --model sonnet'
