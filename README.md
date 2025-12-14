@@ -35,9 +35,19 @@ This repo requires SSH authentication. Configure 1Password SSH agent first:
    - Back up existing configs to `~/omarchy-backup-TIMESTAMP/`
    - Install GNU Stow if needed
    - Create symlinks to your dotfiles
-   - Offer to install 4 additional apps (Cursor, Chrome Beta, Tailscale, Solaar)
+   - Offer to install Hy3 plugin and Claude Code
+   - Offer to install optional packages (file managers, monitors, etc.)
+   - Configure API keys for MCP integrations
 
    **Important:** Do NOT use `sudo` - the script doesn't need it.
+
+   **CLI Options:**
+   ```bash
+   ./install.sh --check          # Dry run - preview changes without applying
+   ./install.sh --skip-packages  # Skip optional package selection
+   ./install.sh --skip-secrets   # Skip API key configuration
+   ./install.sh --help           # Show all options
+   ```
 
 ### If You Get Conflicts
 
@@ -69,7 +79,11 @@ stow --adopt omarchy-config
 ## What's Included
 
 - **`omarchy-config/`** - Dotfiles for Hyprland, Waybar, Ghostty, Walker, uwsm, etc.
-- **`install.sh`** - Backup, stow, and optional app installation
+- **`install.sh`** - Main installer with backup, stow, and interactive setup
+- **`lib/`** - Modular libraries:
+  - `tui.sh` - Gum-based UI helpers with fallback to basic prompts
+  - `secrets.sh` - `~/.secrets` file management for API keys
+  - `packages.sh` - Package registry (single source of truth)
 - **`README-apps.md`** - Reference list of packages
 
 ### Configured Applications
@@ -85,9 +99,10 @@ stow --adopt omarchy-config
 
 ### Customization
 
-After installation, edit `~/.config/hypr/autostart.conf` to customize:
-- **Droid session directories** - Change `$HOME/dev`, `$HOME/.dotfiles`, etc. to your project paths
-- **Autostart apps** - Add/remove apps that launch on login
+After installation, edit these files to customize:
+- **`~/.config/hypr/autostart-claude.conf`** - Claude Code workspace sessions
+- **`~/.config/hypr/bindings.conf`** - App launch keybindings
+- **`~/.secrets`** - API keys for MCP integrations (created by installer)
 
 ## Documentation
 
@@ -189,3 +204,19 @@ Don't use sudo. Run scripts as your regular user.
 
 **Stow conflicts:**
 See "If You Get Conflicts" section above.
+
+**Installation failed mid-way:**
+The installer automatically rolls back if stow fails. Your original configs are preserved in `~/omarchy-backup-*/`. To manually restore:
+```bash
+# Remove partial symlinks
+cd ~/dotfiles
+stow -D omarchy-config
+
+# Restore from backup
+cp -r ~/omarchy-backup-TIMESTAMP/.config/hypr ~/.config/
+```
+
+**Preview changes before installing:**
+```bash
+./install.sh --check
+```

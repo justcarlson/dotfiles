@@ -52,7 +52,8 @@ cd ~/.dotfiles && source lib/packages.sh && pkg_write_autostart_file
 ## Boundaries
 
 - ✅ **Always:** Test with `hyprctl reload` after changes
-- ✅ **Always:** Use guard patterns for optional apps
+- ✅ **Always:** Use guard patterns for optional apps (both autostart and keybindings)
+- ✅ **Always:** Include install instructions in notify-send fallback for guarded bindings
 - ⚠️ **Ask first:** Modifying default Omarchy bindings (they live in `~/.local/share/omarchy/`)
 - 🚫 **Never:** Edit files in `~/.local/share/omarchy/` - override in personal configs instead
 - 🚫 **Never:** Hardcode app paths without guards
@@ -63,6 +64,12 @@ cd ~/.dotfiles && source lib/packages.sh && pkg_write_autostart_file
 ```ini
 unbind = SUPER, KEY           # Remove default
 bindd = SUPER, KEY, Desc, dispatcher, args
+```
+
+**Guarded keybinding (for optional apps):**
+```ini
+# Shows notification with install instructions if app not found
+bindd = SUPER SHIFT, F, File manager, exec, command -v yazi &>/dev/null && $terminal -e yazi || notify-send "yazi not installed" "Install with: yay -S yazi"
 ```
 
 **Autostart with window rules:**

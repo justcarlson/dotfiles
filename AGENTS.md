@@ -14,8 +14,13 @@ Personal dotfiles for Omarchy Linux (Arch + Hyprland). Uses GNU Stow for symlink
 ## Commands
 
 ```bash
-# Install everything
+# Install everything (interactive)
 ./install.sh
+
+# Install with options
+./install.sh --check          # Dry run - preview changes
+./install.sh --skip-packages  # Skip optional package selection
+./install.sh --skip-secrets   # Skip API key configuration
 
 # Stow operations
 stow omarchy-config           # Create symlinks
@@ -84,6 +89,12 @@ chmod 600 ~/.secrets
 # e.g., in MCP config: {env:NEW_API_KEY}
 ```
 
+**Adding a guarded keybinding:**
+```bash
+# In bindings.conf - guards ensure graceful failure if app not installed
+bindd = SUPER SHIFT, KEY, Description, exec, command -v app &>/dev/null && uwsm-app -- app || notify-send "app not installed" "Install with: yay -S app"
+```
+
 **Stow conflicts:** Existing non-symlink configs must be backed up or removed first.
 
 **Symlink editing:** `~/.config/*` edits go directly to repo files (they're symlinks).
@@ -99,6 +110,8 @@ Gum wrappers with fallback to basic prompts:
 - `tui_choose "opt1" "opt2"` - Single select
 - `tui_spin "Message..." command` - Spinner
 - `tui_success/error/warning/info "msg"` - Status messages
+- `tui_is_dry_run` - Check if running in dry-run mode
+- `tui_exec "desc" command` - Execute only if not dry-run
 
 ### lib/secrets.sh
 Manages `~/.secrets` file:

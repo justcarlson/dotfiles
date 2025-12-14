@@ -8,6 +8,11 @@ Personal dotfiles for Omarchy Linux (Arch + Hyprland). Uses GNU Stow for symlink
 # Install everything (interactive)
 ./install.sh
 
+# Install with options
+./install.sh --check          # Dry run - preview changes
+./install.sh --skip-packages  # Skip optional package selection
+./install.sh --skip-secrets   # Skip API key configuration
+
 # Stow operations
 stow omarchy-config           # Create symlinks
 stow -D omarchy-config        # Remove symlinks
@@ -79,6 +84,9 @@ chmod 600 ~/.secrets
 ```bash
 # In bindings.conf, format:
 bindd = SUPER SHIFT, KEY, Description, exec, command
+
+# For optional apps, use guards:
+bindd = SUPER SHIFT, KEY, Description, exec, command -v app &>/dev/null && uwsm-app -- app || notify-send "app not installed" "Install with: yay -S app"
 ```
 
 ## Git Workflow
