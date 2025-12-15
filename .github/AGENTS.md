@@ -1,6 +1,8 @@
-# GitHub Workflows
+---
+parent: ../AGENTS.md
+---
 
-CI/CD configuration for the dotfiles repository.
+# GitHub Workflows
 
 ## Workflows
 
@@ -25,16 +27,17 @@ CI/CD configuration for the dotfiles repository.
 - All CI jobs pass
 - Enforced for admins
 
+## Branch Model
+
+- `dev` — Commit here, CI runs on push
+- `main` — Stable, receives PRs from `dev`, version tags (vX.Y.Z) applied here
+- Never push directly to `main`
+
 ## Local Validation
 
 ```bash
-# Shellcheck
 shellcheck -S warning -e SC1090 -e SC1091 install.sh lib/*.sh
-
-# Tests
 ./tests/run_tests.sh
-
-# Dry run
 ./install.sh --check --skip-packages --skip-secrets
 ```
 
