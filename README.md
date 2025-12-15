@@ -24,9 +24,9 @@
 
 ## Quick Start
 
-> **You're on the `dev` branch**
+> **You're on the `main` branch**
 > 
-> This branch contains the latest development changes. For stable releases, see the [`main`](https://github.com/justcarlson/dotfiles/tree/main) branch.
+> This is the stable release branch. For latest development changes, see the [`dev`](https://github.com/justcarlson/dotfiles/tree/dev) branch.
 
 ```bash
 git clone git@github.com:justcarlson/dotfiles.git ~/.dotfiles
