@@ -31,6 +31,7 @@ PACKAGE_REGISTRY=(
     "tree|Utilities|Directory tree viewer|none|none|none"
     "wev|Utilities|Wayland event viewer (debug)|none|none|none"
     "wget|Utilities|Network file downloader|none|none|none"
+    "nautilus|Utilities|GNOME file manager|none|none|none"
     
     # Development
     "bun-bin|Development|Fast JavaScript runtime|none|none|none"
