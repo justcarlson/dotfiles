@@ -1,0 +1,5 @@
+# Stow ignore patterns for omarchy-config
+# These paths will not be symlinked by stow
+
+# Cursor - runtime files conflict with config, managed manually
+\.config/Cursor
