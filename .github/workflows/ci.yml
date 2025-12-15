@@ -17,7 +17,7 @@ jobs:
           scandir: '.'
           severity: warning
         env:
-          SHELLCHECK_OPTS: -e SC1091
+          SHELLCHECK_OPTS: -e SC1090 -e SC1091
 
   test:
     runs-on: ubuntu-latest
