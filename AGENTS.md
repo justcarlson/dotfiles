@@ -33,6 +33,8 @@ stow -D omarchy-config        # Remove symlinks
 
 - Commit to `dev`, PR to `main`, tag releases on `main`
 - Include version badge update in PR (before merge, not after)
+- Sync dev with main using `git merge main`, never rebase
+- Never force push to `dev` or `main`
 - CI runs on push to `dev` and PRs to `main`
 - See [CONTRIBUTING.md](docs/contributing/CONTRIBUTING.md) for details
 

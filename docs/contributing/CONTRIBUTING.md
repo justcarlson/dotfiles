@@ -37,6 +37,11 @@ gh pr merge --merge
 # Sync main locally
 git fetch origin && git checkout main && git pull && git checkout dev
 
+# Sync dev with main (after PR merged)
+git checkout dev && git pull origin dev
+git merge main
+git push origin dev
+
 # Tag a release (on main)
 git checkout main
 git tag -a v1.0.0 -m "Release description"
@@ -50,6 +55,8 @@ git checkout dev
 - **`main`** - Stable branch, receives merges from `dev`
 - **Never** push directly to `main`
 - **Never** delete `dev` branch after merge
+- **Never** force push to `dev` or `main`
+- **Sync dev with main** using `git merge main`, not rebase
 
 ## CI Pipeline
 

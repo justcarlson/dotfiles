@@ -19,6 +19,8 @@ Commit conventions: `Add` | `Fix` | `Update` | `Remove` | `docs:` | `chore:`
 
 **Version releases:** Include badge update in PR, then tag after merge.
 
+**Never force push to `dev` or `main`.**
+
 ## Boundaries
 
 - **Always:** Update docs when changing related code
