@@ -32,11 +32,9 @@ PACKAGE_REGISTRY=(
     "wev|Utilities|Wayland event viewer (debug)|none|none|none"
     "wget|Utilities|Network file downloader|none|none|none"
     
-    # File Management
-    "yazi|File Manager|Terminal file manager (vim-style)|none|none|xdg-mime default yazi.desktop inode/directory"
-    
     # Development
     "bun-bin|Development|Fast JavaScript runtime|none|none|none"
+    "cursor-bin|Development|AI-first coding environment|Cursor/User|none|none"
 )
 
 # =============================================================================
