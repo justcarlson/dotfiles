@@ -23,19 +23,22 @@ tui_setup_trap
 DRY_RUN=false
 SKIP_PACKAGES=false
 SKIP_SECRETS=false
+DEBUG=false
 
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  --check       Dry run - show what would be done without making changes"
+    echo "  --check          Dry run - show what would be done without making changes"
     echo "  --skip-packages  Skip optional package installation"
     echo "  --skip-secrets   Skip API key configuration"
-    echo "  -h, --help    Show this help message"
+    echo "  --debug          Enable debug output for troubleshooting"
+    echo "  -h, --help       Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0              # Full interactive install"
     echo "  $0 --check      # Preview changes without applying"
+    echo "  $0 --debug      # Run with debug output"
     echo "  $0 --skip-packages --skip-secrets  # Minimal install"
 }
 
@@ -52,6 +55,11 @@ parse_args() {
                 ;;
             --skip-secrets)
                 SKIP_SECRETS=true
+                shift
+                ;;
+            --debug)
+                DEBUG=true
+                export OMARCHY_DEBUG=1
                 shift
                 ;;
             -h|--help)
@@ -179,7 +187,7 @@ stow_configs() {
         for config in "${CONFIGS[@]}"; do
             if [[ ! -L "$HOME/$config" ]]; then
                 tui_muted "  Would link: $config"
-                ((would_link++))
+                would_link=$((would_link + 1))
             fi
         done
         tui_muted "  Total: $would_link symlinks"
@@ -229,7 +237,7 @@ rollback_configs() {
             
             mv "$BACKUP_DIR/$config" "$HOME/$config"
             tui_muted "Restored: $config"
-            ((restored++))
+            restored=$((restored + 1))
         fi
     done
     
@@ -369,7 +377,7 @@ install_optional_packages() {
         local name
         name=$(pkg_get_field "$entry" "name")
         if ! pkg_is_installed "$name"; then
-            ((available_count++))
+            available_count=$((available_count + 1))
         fi
     done
     
@@ -384,6 +392,17 @@ install_optional_packages() {
     
     local choice
     choice=$(tui_choose "Install all" "Select packages" "Skip")
+    
+    # Handle empty choice explicitly
+    if [[ -z "$choice" ]]; then
+        tui_warning "No selection made (possible gum/TTY issue). Defaulting to Skip."
+        tui_muted "Skipping. Install later with: yay -S <package>"
+        # Still update autostart config
+        tui_info "Updating autostart configuration..."
+        pkg_write_autostart_file
+        tui_success "autostart-apps.conf updated"
+        return 0
+    fi
     
     case "$choice" in
         "Install all")

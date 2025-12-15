@@ -227,7 +227,7 @@ pkg_install_many() {
     local -a skipped=()
     
     for name in "${packages[@]}"; do
-        ((++current))
+        current=$((current + 1))
         
         if pkg_is_installed "$name"; then
             tui_step "$current" "$total" "$name (already installed)"
