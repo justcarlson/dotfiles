@@ -6,8 +6,8 @@
 # =============================================================================
 # Configuration
 # =============================================================================
-THUNDERBOLT_MODULE_CONF="/etc/mkinitcpio.conf.d/thunderbolt_module.conf"
-THUNDERBOLT_ISSUE_URL="https://github.com/basecamp/omarchy/issues/3906"
+THUNDERBOLT_MODULE_CONF="${THUNDERBOLT_MODULE_CONF:-/etc/mkinitcpio.conf.d/thunderbolt_module.conf}"
+THUNDERBOLT_ISSUE_URL="${THUNDERBOLT_ISSUE_URL:-https://github.com/basecamp/omarchy/issues/3906}"
 
 # =============================================================================
 # Thunderbolt Multi-Monitor Fix
