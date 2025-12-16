@@ -64,15 +64,12 @@ test_thunderbolt_fix_not_needed() {
     echo ""
     echo "=== fixes_needs_thunderbolt_fix when file does not exist ==="
     
-    # Override the variable to point to a non-existent file
+    # Override the config path before sourcing fixes.sh to test the real function
     local result
     result=$(bash -c '
+        export THUNDERBOLT_MODULE_CONF="/tmp/nonexistent_thunderbolt_test_file_12345"
         source "'"$REPO_DIR"'/lib/tui.sh"
-        THUNDERBOLT_MODULE_CONF="/tmp/nonexistent_thunderbolt_test_file_12345"
-        
-        fixes_needs_thunderbolt_fix() {
-            [[ -f "$THUNDERBOLT_MODULE_CONF" ]]
-        }
+        source "'"$REPO_DIR"'/lib/fixes.sh"
         
         if fixes_needs_thunderbolt_fix; then
             echo "NEEDS_FIX"
@@ -93,14 +90,12 @@ test_thunderbolt_fix_needed() {
     tmpfile=$(mktemp)
     echo "MODULES+=(thunderbolt)" > "$tmpfile"
     
+    # Override the config path before sourcing fixes.sh to test the real function
     local result
     result=$(bash -c '
+        export THUNDERBOLT_MODULE_CONF="'"$tmpfile"'"
         source "'"$REPO_DIR"'/lib/tui.sh"
-        THUNDERBOLT_MODULE_CONF="'"$tmpfile"'"
-        
-        fixes_needs_thunderbolt_fix() {
-            [[ -f "$THUNDERBOLT_MODULE_CONF" ]]
-        }
+        source "'"$REPO_DIR"'/lib/fixes.sh"
         
         if fixes_needs_thunderbolt_fix; then
             echo "NEEDS_FIX"
@@ -122,26 +117,12 @@ test_fixes_run_all_no_fixes() {
     echo ""
     echo "=== fixes_run_all when no fixes needed ==="
     
+    # Override the config path before sourcing fixes.sh to test the real function
     local result
     result=$(bash -c '
+        export THUNDERBOLT_MODULE_CONF="/tmp/nonexistent_thunderbolt_test_file_12345"
         source "'"$REPO_DIR"'/lib/tui.sh"
-        THUNDERBOLT_MODULE_CONF="/tmp/nonexistent_thunderbolt_test_file_12345"
-        
-        fixes_needs_thunderbolt_fix() {
-            [[ -f "$THUNDERBOLT_MODULE_CONF" ]]
-        }
-        
-        fixes_run_all() {
-            local has_fixes=false
-            
-            if fixes_needs_thunderbolt_fix; then
-                has_fixes=true
-            fi
-            
-            if [[ "$has_fixes" == "false" ]]; then
-                tui_success "No system fixes needed"
-            fi
-        }
+        source "'"$REPO_DIR"'/lib/fixes.sh"
         
         fixes_run_all
     ' 2>&1)
@@ -158,27 +139,12 @@ test_fixes_run_all_ci_mode() {
     tmpfile=$(mktemp)
     echo "MODULES+=(thunderbolt)" > "$tmpfile"
     
+    # Override the config path before sourcing fixes.sh to test the real function
     local result
     result=$(CI=true bash -c '
+        export THUNDERBOLT_MODULE_CONF="'"$tmpfile"'"
         source "'"$REPO_DIR"'/lib/tui.sh"
-        THUNDERBOLT_MODULE_CONF="'"$tmpfile"'"
-        
-        fixes_needs_thunderbolt_fix() {
-            [[ -f "$THUNDERBOLT_MODULE_CONF" ]]
-        }
-        
-        fixes_run_all() {
-            local has_fixes=false
-            
-            if fixes_needs_thunderbolt_fix; then
-                has_fixes=true
-                
-                if _is_ci || ! _has_tty; then
-                    tui_muted "Skipping thunderbolt fix (non-interactive)"
-                    return 0
-                fi
-            fi
-        }
+        source "'"$REPO_DIR"'/lib/fixes.sh"
         
         fixes_run_all
     ' 2>&1)
@@ -197,14 +163,12 @@ test_fixes_dry_run() {
     tmpfile=$(mktemp)
     echo "MODULES+=(thunderbolt)" > "$tmpfile"
     
+    # Override the config path before sourcing fixes.sh to test the real function
     local result
     result=$(DRY_RUN=true bash -c '
+        export THUNDERBOLT_MODULE_CONF="'"$tmpfile"'"
         source "'"$REPO_DIR"'/lib/tui.sh"
-        THUNDERBOLT_MODULE_CONF="'"$tmpfile"'"
-        
-        fixes_needs_thunderbolt_fix() {
-            [[ -f "$THUNDERBOLT_MODULE_CONF" ]]
-        }
+        source "'"$REPO_DIR"'/lib/fixes.sh"
         
         if [[ "$DRY_RUN" == "true" ]]; then
             if fixes_needs_thunderbolt_fix; then
