@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/Arch_Linux-1793D1?style=flat&logo=arch-linux&logoColor=white" alt="Arch Linux">
     <img src="https://img.shields.io/badge/Hyprland-58E1FF?style=flat&logo=hyprland&logoColor=black" alt="Hyprland">
     <!-- x-release-please-start-version -->
-    <img src="https://img.shields.io/badge/version-3.4.0-blue?style=flat" alt="Version">
+    <img src="https://img.shields.io/badge/version-3.5.0?style=flat" alt="Version">
     <!-- x-release-please-end -->
     <!-- <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="License"> ## no MIT license, presently--> 
     <a href="docs/contributing/CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
