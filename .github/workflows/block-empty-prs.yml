@@ -1,0 +1,24 @@
+name: Block Empty PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for file changes
+        uses: tj-actions/changed-files@v46
+        id: changed-files
+
+      - name: Fail if no files changed
+        if: steps.changed-files.outputs.any_changed != 'true'
+        run: |
+          echo "::error::This PR has no file changes. Empty PRs are not allowed."
+          exit 1
+
+      - name: Report changed files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "PR contains ${{ steps.changed-files.outputs.all_changed_files_count }} changed file(s)"
