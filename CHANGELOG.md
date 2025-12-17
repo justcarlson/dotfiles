@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.7.3](https://github.com/justcarlson/dotfiles/compare/v3.7.2...v3.7.3) (2025-12-17)
+
+
+### Bug Fixes
+
+* replace exa with tavily for faster MCP startup ([e10558d](https://github.com/justcarlson/dotfiles/commit/e10558df42812f8d4e7548c941f6646e37fe70dc))
+* replace exa with tavily for faster MCP startup ([61a6581](https://github.com/justcarlson/dotfiles/commit/61a6581ad15b024ac504349256a878067cae481a))
+
 ## [3.7.2](https://github.com/justcarlson/dotfiles/compare/v3.7.1...v3.7.2) (2025-12-17)
 
 
