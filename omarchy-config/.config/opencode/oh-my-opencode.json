@@ -10,16 +10,19 @@
   },
   "agents": {
     "oracle": {
-      "model": "anthropic/claude-opus-4-5"
+      "model": "opencode/gpt-5.2"
     },
     "frontend-ui-ux-engineer": {
       "model": "opencode/gemini-3-pro"
     },
     "document-writer": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "opencode/gemini-3-pro"
     },
     "multimodal-looker": {
-      "model": "anthropic/claude-sonnet-4-5"
+      "model": "opencode/gemini-3-pro"
+    },
+    "explore": {
+      "model": "opencode/grok-code"
     }
   }
 }
