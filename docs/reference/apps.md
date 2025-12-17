@@ -43,6 +43,49 @@ Installed during `./install.sh`:
 | [OpenCode](https://github.com/sst/opencode) | Primary CLI agent (open source) | `curl -fsSL https://opencode.ai/install \| bash` |
 | [Claude Code](https://github.com/anthropics/claude-code) | Fallback CLI agent (Anthropic) | `npm i -g @anthropic-ai/claude-code` |
 
+### OpenCode Configuration
+
+OpenCode config is managed via stow at `~/.config/opencode/` (symlinked from `omarchy-config/.config/opencode/`).
+
+| File | Purpose | Git Tracked |
+|------|---------|-------------|
+| `opencode.jsonc` | Main config, plugin registration, MCPs | Yes |
+| `oh-my-opencode.json` | Agent model overrides, feature toggles | Yes |
+| `package.json` | Plugin dependencies | No (gitignored) |
+| `node_modules/` | Installed plugins | No (gitignored) |
+
+**Plugin:** [oh-my-opencode](https://github.com/code-yeongyu/oh-my-opencode) - Curated agents, MCPs, and Claude Code compatibility layer.
+
+**Post-clone setup:** The `install.sh` script automatically installs the oh-my-opencode plugin. If needed manually:
+
+```bash
+cd ~/.config/opencode && bun add oh-my-opencode
+```
+
+#### Agent Model Assignments
+
+Uses Claude Max for Claude models, OpenCode Zen for others:
+
+| Agent | Purpose | Model | Provider |
+|-------|---------|-------|----------|
+| OmO | Main orchestrator | claude-opus-4-5 | Claude Max |
+| Librarian | Docs & codebase research | claude-sonnet-4-5 | Claude Max |
+| Oracle | Design & debugging | gpt-5.2 | OpenCode Zen |
+| Frontend UI/UX | UI development | gemini-3-pro | OpenCode Zen |
+| Document Writer | Technical writing | gemini-3-pro | OpenCode Zen |
+| Multimodal Looker | Visual content analysis | gemini-3-pro | OpenCode Zen |
+| Explore | Fast codebase search | grok-code | OpenCode Zen |
+
+#### MCP Servers
+
+| MCP | Purpose | Config Location |
+|-----|---------|-----------------|
+| tavily | Web search | `opencode.jsonc` |
+| Ref | Documentation lookup | `opencode.jsonc` |
+| grep_app | GitHub code search | oh-my-opencode built-in |
+
+API keys for MCPs are stored in `~/.secrets` (see Secrets section during install).
+
 ## Development Tools
 
 | Package | Purpose | Install | Keybinding |

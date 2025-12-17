@@ -550,6 +550,45 @@ configure_mcp_servers() {
     fi
 }
 
+install_opencode_plugin() {
+    # Only proceed if OpenCode is installed and config exists
+    if ! command -v opencode &>/dev/null; then
+        return 0
+    fi
+    
+    local opencode_config="$HOME/.config/opencode"
+    if [[ ! -d "$opencode_config" ]]; then
+        return 0
+    fi
+    
+    # Check if oh-my-opencode already installed
+    if [[ -d "$opencode_config/node_modules/oh-my-opencode" ]]; then
+        tui_success "oh-my-opencode plugin already installed"
+        return 0
+    fi
+    
+    # Requires bun
+    if ! command -v bun &>/dev/null; then
+        tui_warning "bun not installed - skipping oh-my-opencode plugin"
+        tui_muted "Install bun first: yay -S bun-bin"
+        tui_muted "Then run: cd ~/.config/opencode && bun add oh-my-opencode"
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would install oh-my-opencode plugin"
+        return 0
+    fi
+    
+    tui_info "Installing oh-my-opencode plugin..."
+    if (cd "$opencode_config" && bun add oh-my-opencode 2>/dev/null); then
+        tui_success "oh-my-opencode plugin installed"
+    else
+        tui_warning "Failed to install oh-my-opencode plugin"
+        tui_muted "Try manually: cd ~/.config/opencode && bun add oh-my-opencode"
+    fi
+}
+
 show_summary() {
     tui_header "Setup Complete!"
     
@@ -613,8 +652,10 @@ main() {
     tui_step 4 6 "CLI coding agents"
     if [[ "$DRY_RUN" == "true" ]]; then
         tui_info "[DRY RUN] Would prompt for CLI agent installation (OpenCode, Claude Code)"
+        install_opencode_plugin  # Handles its own dry-run check
     else
         install_cli_agents
+        install_opencode_plugin
     fi
     echo ""
     
