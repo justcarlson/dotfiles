@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.7.2](https://github.com/justcarlson/dotfiles/compare/v3.7.1...v3.7.2) (2025-12-17)
+
+
+### Bug Fixes
+
+* remove tool restrictions from exa MCP config ([c98e9af](https://github.com/justcarlson/dotfiles/commit/c98e9afbf32f7b2f3454c532e0683d90a6f8d321))
+* remove tool restrictions from exa MCP config ([6c46866](https://github.com/justcarlson/dotfiles/commit/6c46866751e846dc23e0c527f84b8c73c69f070c))
+
 ## [3.7.1](https://github.com/justcarlson/dotfiles/compare/v3.7.0...v3.7.1) (2025-12-17)
 
 
