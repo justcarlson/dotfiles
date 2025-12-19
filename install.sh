@@ -586,12 +586,11 @@ install_beads() {
             ;;
     esac
     
-    # Get latest version from GitHub API
     local latest_version
-    latest_version=$(curl -sL "https://api.github.com/repos/steveyegge/beads/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+    latest_version=$(curl -fsSL "https://api.github.com/repos/steveyegge/beads/releases/latest" 2>/dev/null | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
     
-    if [[ -z "$latest_version" ]]; then
-        tui_error "Failed to fetch latest bd version"
+    if [[ -z "$latest_version" || "$latest_version" == "null" ]]; then
+        tui_error "Failed to fetch latest bd version (API rate limit?)"
         tui_muted "Install manually from: https://github.com/steveyegge/beads/releases"
         return 1
     fi
@@ -601,23 +600,32 @@ install_beads() {
     temp_dir=$(mktemp -d)
     
     tui_info "Downloading bd ${latest_version}..."
-    if ! curl -sL "$download_url" -o "$temp_dir/beads.tar.gz"; then
+    if ! curl -fsSL "$download_url" -o "$temp_dir/beads.tar.gz"; then
         tui_error "Failed to download bd"
         rm -rf "$temp_dir"
         return 1
     fi
     
-    # Extract and install
+    if [[ ! -s "$temp_dir/beads.tar.gz" ]]; then
+        tui_error "Downloaded file is empty"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
     if ! tar -xzf "$temp_dir/beads.tar.gz" -C "$temp_dir"; then
         tui_error "Failed to extract bd archive"
         rm -rf "$temp_dir"
         return 1
     fi
     
-    # Ensure ~/.local/bin exists
+    if [[ ! -f "$temp_dir/bd" ]]; then
+        tui_error "Could not find bd binary in archive"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
     mkdir -p "$HOME/.local/bin"
     
-    # Install the binary
     if mv "$temp_dir/bd" "$HOME/.local/bin/bd" && chmod +x "$HOME/.local/bin/bd"; then
         tui_success "bd ${latest_version} installed to ~/.local/bin/bd"
         tui_muted "Run 'bd init' in a git repo to start tracking issues"
