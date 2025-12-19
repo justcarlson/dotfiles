@@ -1,6 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
   "disabled_mcps": ["websearch_exa", "context7"],
+  "experimental": {
+    "aggressive_truncation": true
+  },
   "claude_code": {
     "mcp": false,
     "commands": false,
