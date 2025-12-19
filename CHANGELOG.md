@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.9.1](https://github.com/justcarlson/dotfiles/compare/v3.9.0...v3.9.1) (2025-12-19)
+
+
+### Bug Fixes
+
+* **ci:** release claude-code-review optimization ([68f77b6](https://github.com/justcarlson/dotfiles/commit/68f77b66862cb1f751e613a8e90ee3840efcd6b7))
+* **ci:** skip claude-code-review for bot PRs and non-code changes ([20b8232](https://github.com/justcarlson/dotfiles/commit/20b8232b499293cce5a84c0c6e7a49324512e460))
+* **ci:** skip claude-code-review for bot PRs and non-code changes ([6e628a7](https://github.com/justcarlson/dotfiles/commit/6e628a7e6ca39000f2f9eeb2a779e4ce2cc659e4))
+
 ## [3.9.0](https://github.com/justcarlson/dotfiles/compare/v3.8.0...v3.9.0) (2025-12-19)
 
 
