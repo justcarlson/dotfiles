@@ -550,6 +550,94 @@ configure_mcp_servers() {
     fi
 }
 
+install_beads() {
+    tui_subheader "Beads Issue Tracking"
+    echo ""
+    tui_info "bd (beads) - AI-native issue tracking that lives in your repo"
+    tui_muted "Used for tracking issues in dotfiles and other projects"
+    echo ""
+    
+    # Check if already installed
+    if command -v bd &>/dev/null; then
+        local current_version
+        current_version=$(bd --version 2>/dev/null | head -1 || echo "unknown")
+        tui_success "bd already installed ($current_version)"
+        return 0
+    fi
+    
+    if ! tui_confirm "Install bd (beads issue tracker)?"; then
+        tui_muted "Skipping bd. Install later from: https://github.com/steveyegge/beads"
+        return 0
+    fi
+    
+    if [[ "$DRY_RUN" == "true" ]]; then
+        tui_info "[DRY RUN] Would download and install bd from GitHub releases"
+        return 0
+    fi
+    
+    # Detect architecture
+    local arch
+    case "$(uname -m)" in
+        x86_64)  arch="amd64" ;;
+        aarch64) arch="arm64" ;;
+        *)
+            tui_error "Unsupported architecture: $(uname -m)"
+            return 1
+            ;;
+    esac
+    
+    local latest_version
+    latest_version=$(curl -fsSL "https://api.github.com/repos/steveyegge/beads/releases/latest" 2>/dev/null | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+    
+    if [[ -z "$latest_version" || "$latest_version" == "null" ]]; then
+        tui_error "Failed to fetch latest bd version (API rate limit?)"
+        tui_muted "Install manually from: https://github.com/steveyegge/beads/releases"
+        return 1
+    fi
+    
+    local download_url="https://github.com/steveyegge/beads/releases/download/${latest_version}/beads_${latest_version#v}_linux_${arch}.tar.gz"
+    local temp_dir
+    temp_dir=$(mktemp -d)
+    
+    tui_info "Downloading bd ${latest_version}..."
+    if ! curl -fsSL "$download_url" -o "$temp_dir/beads.tar.gz"; then
+        tui_error "Failed to download bd"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    if [[ ! -s "$temp_dir/beads.tar.gz" ]]; then
+        tui_error "Downloaded file is empty"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    if ! tar -xzf "$temp_dir/beads.tar.gz" -C "$temp_dir"; then
+        tui_error "Failed to extract bd archive"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    if [[ ! -f "$temp_dir/bd" ]]; then
+        tui_error "Could not find bd binary in archive"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    mkdir -p "$HOME/.local/bin"
+    
+    if mv "$temp_dir/bd" "$HOME/.local/bin/bd" && chmod +x "$HOME/.local/bin/bd"; then
+        tui_success "bd ${latest_version} installed to ~/.local/bin/bd"
+        tui_muted "Run 'bd init' in a git repo to start tracking issues"
+    else
+        tui_error "Failed to install bd binary"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+    
+    rm -rf "$temp_dir"
+}
+
 install_opencode_plugin() {
     # Only proceed if OpenCode is installed and config exists
     if ! command -v opencode &>/dev/null; then
@@ -648,14 +736,16 @@ main() {
     fi
     echo ""
     
-    # Step 4: CLI Agents (OpenCode + Claude Code)
-    tui_step 4 6 "CLI coding agents"
+    # Step 4: CLI Agents (OpenCode + Claude Code) and Tools
+    tui_step 4 6 "CLI coding agents & tools"
     if [[ "$DRY_RUN" == "true" ]]; then
         tui_info "[DRY RUN] Would prompt for CLI agent installation (OpenCode, Claude Code)"
         install_opencode_plugin  # Handles its own dry-run check
+        install_beads  # Handles its own dry-run check
     else
         install_cli_agents
         install_opencode_plugin
+        install_beads
     fi
     echo ""
     
