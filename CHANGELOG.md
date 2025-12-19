@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.0](https://github.com/justcarlson/dotfiles/compare/v4.1.0...v4.2.0) (2025-12-19)
+
+
+### Features
+
+* **opencode:** enable aggressive truncation ([14e1237](https://github.com/justcarlson/dotfiles/commit/14e12371377b316cf446c36d897eba00ad80d32f))
+* **opencode:** enable aggressive truncation for token limit handling ([38f5e8a](https://github.com/justcarlson/dotfiles/commit/38f5e8a2581478c0d98c74a4eaa8c41f087212b4))
+
 ## [4.1.0](https://github.com/justcarlson/dotfiles/compare/v4.0.0...v4.1.0) (2025-12-19)
 
 
