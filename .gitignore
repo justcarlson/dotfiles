@@ -1,5 +1,6 @@
 # Large binaries - install via install.sh or package manager
 omarchy-config/.local/bin/bd
+omarchy-config/.local/bin/bv
 omarchy-config/.local/bin/droid
 omarchy-config/.local/bin/claude
 
@@ -8,3 +9,6 @@ omarchy-config/.config/hypr/autostart-apps.conf
 
 # Cursor - not stow-managed (runtime files mixed with config)
 omarchy-config/.config/Cursor/
+
+# bv (beads viewer) local config and caches
+.bv/
