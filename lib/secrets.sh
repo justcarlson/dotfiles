@@ -191,7 +191,8 @@ secrets_verify_shell() {
         tui_muted "Run 'omarchy shell fish' to reconfigure"
         return 1
     else
-        return secrets_verify_bashrc
+        secrets_verify_bashrc
+        return $?
     fi
 }
 
