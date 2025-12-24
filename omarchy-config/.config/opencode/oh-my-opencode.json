@@ -15,6 +15,9 @@
     "Sisyphus": {
       "model": "anthropic/claude-opus-4-5"
     },
+    "Planner-Sisyphus": {
+      "model": "anthropic/claude-opus-4-5"
+    },
     "librarian": {
       "model": "anthropic/claude-sonnet-4-5"
     },
