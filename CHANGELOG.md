@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.0](https://github.com/justcarlson/dotfiles/compare/v4.3.0...v4.4.0) (2025-12-24)
+
+
+### Features
+
+* **opencode:** add Planner-Sisyphus model override ([#109](https://github.com/justcarlson/dotfiles/issues/109)) ([e539ddb](https://github.com/justcarlson/dotfiles/commit/e539ddb152cd4715436416f1fa5ff64db151a1ac))
+
 ## [4.3.0](https://github.com/justcarlson/dotfiles/compare/v4.2.0...v4.3.0) (2025-12-23)
 
 
